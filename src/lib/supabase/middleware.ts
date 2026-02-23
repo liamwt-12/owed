@@ -12,7 +12,7 @@ export async function updateSession(request: NextRequest) {
         getAll() {
           return request.cookies.getAll()
         },
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) {
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           )
@@ -29,19 +29,10 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Protected routes — redirect to login if no session
   if (
     !user &&
-    request.nextUrl.pathname.startsWith('/dashboard')
-  ) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/login'
-    return NextResponse.redirect(url)
-  }
-
-  if (
-    !user &&
-    (request.nextUrl.pathname.startsWith('/settings') ||
+    (request.nextUrl.pathname.startsWith('/dashboard') ||
+     request.nextUrl.pathname.startsWith('/settings') ||
      request.nextUrl.pathname.startsWith('/invoice'))
   ) {
     const url = request.nextUrl.clone()
@@ -49,7 +40,6 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // Redirect logged-in users away from auth pages
   if (
     user &&
     (request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/signup')
