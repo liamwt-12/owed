@@ -12,7 +12,6 @@ export async function POST(request: Request) {
 
   const { invoice_id } = await request.json()
 
-  // Get invoice amount for stats
   const { data: invoice } = await supabase
     .from('invoices')
     .select('amount_due')
@@ -24,24 +23,29 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
   }
 
-  await supabase
+  const { error } = await supabase
     .from('invoices')
     .update({ status: 'paid', chasing_enabled: false })
     .eq('id', invoice_id)
     .eq('user_id', user.id)
 
-  // Cancel pending emails
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+
   await supabase
     .from('chase_emails')
     .update({ status: 'cancelled' })
     .eq('invoice_id', invoice_id)
-    .eq('user_id', user.id)
     .eq('status', 'scheduled')
 
-  // Increment platform stats
-  await supabaseAdmin.rpc('increment_recovered', {
-    amount: invoice.amount_due,
-  })
+  try {
+    await supabaseAdmin.rpc('increment_recovered', {
+      amount: invoice.amount_due,
+    })
+  } catch (e) {
+    console.error('Failed to increment platform stats:', e)
+  }
 
   return NextResponse.json({ ok: true })
 }
