@@ -1,34 +1,57 @@
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
-import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+const STAGE_DELAYS = [0, 0, 6, 7, 7]
 
-const EMAIL_TEMPLATES = {
-  1: {
-    subject: (num: string) => `Invoice ${num} — Quick reminder`,
-    body: (contact: string, num: string, amount: string, date: string, business: string) =>
-      `Hi ${contact},\n\nJust a quick note that invoice ${num} for ${amount} was due on ${date}.\n\nIf you've already sent payment, please ignore this — and thank you.\n\nIf not, do let us know if you have any questions.\n\nMany thanks,\n${business}`,
-  },
-  2: {
-    subject: (num: string) => `Invoice ${num} — Payment outstanding`,
-    body: (contact: string, num: string, amount: string, _date: string, business: string) =>
-      `Hi ${contact},\n\nFollowing up on invoice ${num} for ${amount}, which remains outstanding.\n\nCould you let me know when we can expect payment, or if there's anything we can help resolve on our end?\n\nThanks,\n${business}`,
-  },
-  3: {
-    subject: (num: string) => `Invoice ${num} — Action required`,
-    body: (contact: string, num: string, amount: string, _date: string, business: string) =>
-      `Hi ${contact},\n\nInvoice ${num} for ${amount} is now 14 days overdue. We'd appreciate confirmation of payment within 5 working days.\n\nIf there's an issue with this invoice, please reply and we'll be happy to discuss.\n\nRegards,\n${business}`,
-  },
-  4: {
-    subject: (num: string) => `Invoice ${num} — Final notice`,
-    body: (contact: string, num: string, amount: string, _date: string, business: string) =>
-      `Hi ${contact},\n\nThis is a final reminder regarding invoice ${num} for ${amount}, now 21 days overdue.\n\nIf payment is not received shortly, we may need to consider further action in line with our terms.\n\nWe'd strongly prefer to resolve this directly — please reply or arrange payment at your earliest convenience.\n\n${business}`,
-  },
-} as const
+function getEmailContent(stage: number, invoice: any, businessName: string) {
+  const contact = invoice.contact_name.split(' ')[0]
+  const amount = `£${Number(invoice.amount_due).toLocaleString('en-GB', { minimumFractionDigits: 2 })}`
+  const number = invoice.invoice_number || 'your invoice'
+  const dueDate = new Date(invoice.due_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
 
-// Days after previous stage to send next
-const STAGE_GAPS: Record<number, number> = { 1: 0, 2: 6, 3: 7, 4: 7 }
+  switch (stage) {
+    case 1:
+      return {
+        subject: `Invoice ${number} — Quick reminder`,
+        html: `<p>Hi ${contact},</p>
+<p>Just a quick note that invoice ${number} for ${amount} was due on ${dueDate}.</p>
+<p>If you've already sent payment, please ignore this — and thank you.</p>
+<p>If not, do let us know if you have any questions.</p>
+<p>Many thanks,<br>${businessName}</p>
+<p style="color:#999;font-size:12px;margin-top:32px;border-top:1px solid #eee;padding-top:16px">Sent on behalf of ${businessName} · Powered by Owed</p>`,
+      }
+    case 2:
+      return {
+        subject: `Invoice ${number} — Payment outstanding`,
+        html: `<p>Hi ${contact},</p>
+<p>Following up on invoice ${number} for ${amount}, which remains outstanding.</p>
+<p>Could you let me know when we can expect payment, or if there's anything we can help resolve on our end?</p>
+<p>Thanks,<br>${businessName}</p>
+<p style="color:#999;font-size:12px;margin-top:32px;border-top:1px solid #eee;padding-top:16px">Sent on behalf of ${businessName} · Powered by Owed</p>`,
+      }
+    case 3:
+      return {
+        subject: `Invoice ${number} — Action required`,
+        html: `<p>Hi ${contact},</p>
+<p>Invoice ${number} for ${amount} is now significantly overdue. We'd appreciate confirmation of payment within 5 working days.</p>
+<p>If there's an issue with this invoice, please reply and we'll be happy to discuss.</p>
+<p>Regards,<br>${businessName}</p>
+<p style="color:#999;font-size:12px;margin-top:32px;border-top:1px solid #eee;padding-top:16px">Sent on behalf of ${businessName} · Powered by Owed</p>`,
+      }
+    case 4:
+      return {
+        subject: `Invoice ${number} — Final notice`,
+        html: `<p>Hi ${contact},</p>
+<p>This is a final reminder regarding invoice ${number} for ${amount}.</p>
+<p>If payment is not received shortly, we may need to consider further action in line with our terms.</p>
+<p>We'd strongly prefer to resolve this directly — please reply or arrange payment at your earliest convenience.</p>
+<p>${businessName}</p>
+<p style="color:#999;font-size:12px;margin-top:32px;border-top:1px solid #eee;padding-top:16px">Sent on behalf of ${businessName} · Powered by Owed</p>`,
+      }
+    default:
+      return { subject: '', html: '' }
+  }
+}
 
 export async function GET(request: Request) {
   const authHeader = request.headers.get('authorization')
@@ -36,100 +59,112 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  // Get all open, chasing-enabled invoices that are overdue
+  let sent = 0
+  let completed = 0
+  let errors = 0
+
   const { data: invoices } = await supabaseAdmin
     .from('invoices')
-    .select('*, chase_emails(*)')
+    .select('*, profiles!inner(email, business_name)')
     .eq('status', 'open')
     .eq('chasing_enabled', true)
-    .gt('days_overdue', 0)
+    .not('contact_email', 'is', null)
 
   if (!invoices || invoices.length === 0) {
     return NextResponse.json({ sent: 0, message: 'No invoices to chase' })
   }
 
-  let sent = 0
-
   for (const invoice of invoices) {
     try {
-      const sentEmails = (invoice.chase_emails || [])
-        .filter((e: any) => e.status === 'sent')
-        .sort((a: any, b: any) => a.stage - b.stage)
+      const { data: existingEmails } = await supabaseAdmin
+        .from('chase_emails')
+        .select('*')
+        .eq('invoice_id', invoice.id)
+        .eq('status', 'sent')
+        .order('stage', { ascending: false })
+        .limit(1)
 
-      const lastSentStage = sentEmails.length > 0
-        ? sentEmails[sentEmails.length - 1].stage
-        : 0
+      const lastSentEmail = existingEmails?.[0]
+      const lastStage = lastSentEmail?.stage || 0
+      const nextStage = lastStage + 1
 
-      // If all 4 stages sent, mark as completed
-      if (lastSentStage >= 4) {
-        await supabaseAdmin.from('invoices').update({
-          status: 'completed',
-        }).eq('id', invoice.id)
+      if (nextStage > 4) {
+        await supabaseAdmin
+          .from('invoices')
+          .update({ status: 'completed', chasing_enabled: false })
+          .eq('id', invoice.id)
+        completed++
         continue
       }
 
-      const nextStage = lastSentStage + 1
-
-      // Check if enough days have passed since last email
-      if (lastSentStage > 0) {
-        const lastSent = sentEmails[sentEmails.length - 1]
-        const daysSinceLastEmail = Math.floor(
-          (Date.now() - new Date(lastSent.sent_at).getTime()) / (1000 * 60 * 60 * 24)
+      if (lastSentEmail) {
+        const daysSinceLast = Math.floor(
+          (Date.now() - new Date(lastSentEmail.sent_at).getTime()) / (1000 * 60 * 60 * 24)
         )
-        if (daysSinceLastEmail < STAGE_GAPS[nextStage]) {
-          continue // Not time yet
+        if (daysSinceLast < STAGE_DELAYS[nextStage]) {
+          continue
         }
       }
 
-      // Skip if no email address
-      if (!invoice.contact_email) continue
+      const { data: existingScheduled } = await supabaseAdmin
+        .from('chase_emails')
+        .select('id')
+        .eq('invoice_id', invoice.id)
+        .eq('stage', nextStage)
+        .in('status', ['sent', 'scheduled'])
+        .limit(1)
 
-      // Get user's business name
-      const { data: profile } = await supabaseAdmin
-        .from('profiles')
-        .select('business_name, email')
-        .eq('id', invoice.user_id)
-        .single()
-
-      const businessName = profile?.business_name || 'Our team'
-      const template = EMAIL_TEMPLATES[nextStage as keyof typeof EMAIL_TEMPLATES]
-      const amount = `£${Number(invoice.amount_due).toLocaleString('en-GB', { minimumFractionDigits: 2 })}`
-      const dueDate = new Date(invoice.due_date).toLocaleDateString('en-GB', {
-        day: 'numeric', month: 'long', year: 'numeric',
-      })
-
-      const contactFirstName = invoice.contact_name.split(' ')[0]
-
-      const { data: emailResult, error: emailError } = await resend.emails.send({
-        from: process.env.RESEND_FROM_EMAIL!,
-        replyTo: profile?.email || undefined,
-        to: [invoice.contact_email],
-        subject: template.subject(invoice.invoice_number || invoice.external_id),
-        text: template.body(contactFirstName, invoice.invoice_number || invoice.external_id, amount, dueDate, businessName)
-          + `\n\n---\nSent on behalf of ${businessName} · Powered by Owed`,
-      })
-
-      if (emailError) {
-        console.error(`Failed to send chase email for invoice ${invoice.id}:`, emailError)
+      if (existingScheduled && existingScheduled.length > 0) {
         continue
       }
 
-      // Record the chase email
+      const profile = (invoice as any).profiles
+      const businessName = profile?.business_name || 'Our records'
+      const replyTo = profile?.email
+
+      const { subject, html } = getEmailContent(nextStage, invoice, businessName)
+
+      const resendRes = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: process.env.RESEND_FROM_EMAIL || 'accounts@owedhq.com',
+          to: invoice.contact_email,
+          reply_to: replyTo,
+          subject,
+          html,
+        }),
+      })
+
+      if (!resendRes.ok) {
+        const errText = await resendRes.text()
+        console.error(`Resend error for invoice ${invoice.invoice_number}:`, errText)
+        errors++
+        continue
+      }
+
+      const resendData = await resendRes.json()
+
       await supabaseAdmin.from('chase_emails').insert({
         invoice_id: invoice.id,
         user_id: invoice.user_id,
         stage: nextStage,
         scheduled_for: new Date().toISOString(),
         sent_at: new Date().toISOString(),
-        resend_message_id: emailResult?.id || null,
+        resend_message_id: resendData.id,
         status: 'sent',
       })
 
       sent++
+      console.log(`Sent Stage ${nextStage} to ${invoice.contact_email} for ${invoice.invoice_number}`)
     } catch (err) {
       console.error(`Chase error for invoice ${invoice.id}:`, err)
+      errors++
     }
   }
 
-  return NextResponse.json({ sent, total: invoices.length })
+  return NextResponse.json({ sent, completed, errors, total: invoices.length })
 }
