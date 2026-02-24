@@ -11,11 +11,15 @@ export async function POST(request: Request) {
 
   const { invoice_id } = await request.json()
 
-  await supabase
+  const { error } = await supabase
     .from('invoices')
-    .update({ chasing_enabled: true, status: 'open' })
+    .update({ chasing_enabled: true })
     .eq('id', invoice_id)
     .eq('user_id', user.id)
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
 
   return NextResponse.json({ ok: true })
 }
