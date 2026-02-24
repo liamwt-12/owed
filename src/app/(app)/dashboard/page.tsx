@@ -14,16 +14,9 @@ export default async function DashboardPage() {
   if (!connections || connections.length === 0) {
     return (
       <div className="max-w-[500px] mx-auto mt-12 md:mt-20 text-center">
-        <h1 className="font-syne font-extrabold text-2xl text-ink tracking-tight mb-3">
-          Connect Xero to get started
-        </h1>
-        <p className="text-muted text-[15px] mb-8 leading-relaxed">
-          We&apos;ll find your overdue invoices and start chasing. Read-only access. We never touch your data.
-        </p>
-        <Link
-          href="/onboarding/connect"
-          className="inline-flex items-center gap-2 px-6 py-3 bg-ink text-paper font-semibold text-[15px] rounded-lg hover:bg-ink-2 transition-colors"
-        >
+        <h1 className="font-syne font-extrabold text-2xl text-ink tracking-tight mb-3">Connect Xero to get started</h1>
+        <p className="text-muted text-[15px] mb-8 leading-relaxed">We&apos;ll find your overdue invoices and start chasing. Read-only access. We never touch your data.</p>
+        <Link href="/onboarding/connect" className="inline-flex items-center gap-2 px-6 py-3 bg-ink text-paper font-semibold text-[15px] rounded-lg hover:bg-ink-2 transition-colors">
           Connect Xero
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
         </Link>
@@ -37,9 +30,7 @@ export default async function DashboardPage() {
     .eq('user_id', user!.id)
     .order('due_date', { ascending: true })
 
-  if (error) {
-    console.error('Dashboard query error:', error)
-  }
+  if (error) console.error('Dashboard query error:', error)
 
   if (!invoices || invoices.length === 0) {
     return (
@@ -53,12 +44,11 @@ export default async function DashboardPage() {
     )
   }
 
-  const totalOutstanding = invoices
-    .filter(inv => inv.status === 'open')
-    .reduce((sum, inv) => sum + Number(inv.amount_due), 0)
-
-  const chasingCount = invoices.filter(inv => inv.status === 'open' && inv.chasing_enabled).length
-  const pausedCount = invoices.filter(inv => !inv.chasing_enabled || inv.status === 'paused').length
+  const openInvoices = invoices.filter(inv => inv.status === 'open')
+  const totalOutstanding = openInvoices.reduce((sum, inv) => sum + Number(inv.amount_due), 0)
+  const chasingCount = openInvoices.filter(inv => inv.chasing_enabled).length
+  const pausedCount = openInvoices.filter(inv => !inv.chasing_enabled).length
+  const paidCount = invoices.filter(inv => inv.status === 'paid').length
 
   return (
     <div>
@@ -68,7 +58,9 @@ export default async function DashboardPage() {
           {chasingCount > 0 && <>{chasingCount} chasing</>}
           {chasingCount > 0 && pausedCount > 0 && ' · '}
           {pausedCount > 0 && <>{pausedCount} paused</>}
-          {' · '}£{totalOutstanding.toLocaleString('en-GB', { minimumFractionDigits: 2 })} outstanding
+          {(chasingCount > 0 || pausedCount > 0) && paidCount > 0 && ' · '}
+          {paidCount > 0 && <>{paidCount} paid</>}
+          {openInvoices.length > 0 && <> · £{totalOutstanding.toLocaleString('en-GB', { minimumFractionDigits: 2 })} outstanding</>}
         </p>
       </div>
 
@@ -89,16 +81,20 @@ export default async function DashboardPage() {
             {invoices.map((invoice) => {
               const daysOverdue = Math.max(0, Math.floor((Date.now() - new Date(invoice.due_date).getTime()) / (1000 * 60 * 60 * 24)))
               return (
-                <tr key={invoice.id} className="border-b border-line last:border-0 hover:bg-cream/50 transition-colors">
+                <tr key={invoice.id} className="border-b border-line last:border-0 hover:bg-cream/50 transition-colors cursor-pointer group">
                   <td className="px-5 py-4">
-                    <span className="text-sm font-medium text-ink">{invoice.contact_name}</span>
-                    {!invoice.contact_email && <p className="text-xs text-pop mt-0.5">Missing email</p>}
+                    <Link href={`/invoice/${invoice.id}`} className="block">
+                      <span className="text-sm font-medium text-ink group-hover:underline">{invoice.contact_name}</span>
+                      {!invoice.contact_email && <p className="text-xs text-pop mt-0.5">Missing email</p>}
+                    </Link>
                   </td>
                   <td className="px-5 py-4 text-sm text-muted font-mono">{invoice.invoice_number || '—'}</td>
-                  <td className="px-5 py-4 text-sm font-semibold text-ink text-right font-mono">£{Number(invoice.amount_due).toLocaleString('en-GB', { minimumFractionDigits: 2 })}</td>
+                  <td className="px-5 py-4 text-sm font-semibold text-ink text-right font-mono">
+                    {invoice.status === 'paid' ? <span className="text-green line-through">£{Number(invoice.amount_due).toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span> : <>£{Number(invoice.amount_due).toLocaleString('en-GB', { minimumFractionDigits: 2 })}</>}
+                  </td>
                   <td className="px-5 py-4 text-sm text-muted">{new Date(invoice.due_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
                   <td className="px-5 py-4 text-sm font-semibold text-right font-mono">
-                    <span className={daysOverdue > 14 ? 'text-pop' : daysOverdue > 7 ? 'text-amber' : 'text-ink'}>{daysOverdue}</span>
+                    {invoice.status !== 'paid' ? <span className={daysOverdue > 14 ? 'text-pop' : daysOverdue > 7 ? 'text-amber' : 'text-ink'}>{daysOverdue}</span> : <span className="text-green">—</span>}
                   </td>
                   <td className="px-5 py-4">
                     <StatusPill status={invoice.status} chasingEnabled={invoice.chasing_enabled} hasEmail={!!invoice.contact_email} />
@@ -115,25 +111,35 @@ export default async function DashboardPage() {
         {invoices.map((invoice) => {
           const daysOverdue = Math.max(0, Math.floor((Date.now() - new Date(invoice.due_date).getTime()) / (1000 * 60 * 60 * 24)))
           return (
-            <div key={invoice.id} className="bg-white border border-line rounded-xl p-4">
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex-1 min-w-0 mr-3">
-                  <p className="text-[15px] font-semibold text-ink truncate">{invoice.contact_name}</p>
-                  <p className="text-xs text-muted font-mono mt-0.5">{invoice.invoice_number || '—'}</p>
+            <Link key={invoice.id} href={`/invoice/${invoice.id}`} className="block">
+              <div className={`bg-white border rounded-xl p-4 transition-all active:scale-[0.98] ${invoice.status === 'paid' ? 'border-green/30 bg-green-pale/30' : 'border-line'}`}>
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1 min-w-0 mr-3">
+                    <p className="text-[15px] font-semibold text-ink truncate">{invoice.contact_name}</p>
+                    <p className="text-xs text-muted font-mono mt-0.5">{invoice.invoice_number || '—'}</p>
+                  </div>
+                  <StatusPill status={invoice.status} chasingEnabled={invoice.chasing_enabled} hasEmail={!!invoice.contact_email} />
                 </div>
-                <StatusPill status={invoice.status} chasingEnabled={invoice.chasing_enabled} hasEmail={!!invoice.contact_email} />
+                <div className="flex items-end justify-between">
+                  <div>
+                    <p className={`text-lg font-bold font-mono ${invoice.status === 'paid' ? 'text-green line-through' : 'text-ink'}`}>
+                      £{Number(invoice.amount_due).toLocaleString('en-GB', { minimumFractionDigits: 2 })}
+                    </p>
+                    {!invoice.contact_email && invoice.status !== 'paid' && <p className="text-xs text-pop mt-1">No email — can&apos;t chase</p>}
+                  </div>
+                  {invoice.status !== 'paid' ? (
+                    <div className="text-right">
+                      <p className={`text-lg font-bold font-mono ${daysOverdue > 14 ? 'text-pop' : daysOverdue > 7 ? 'text-amber' : 'text-ink'}`}>{daysOverdue}d</p>
+                      <p className="text-xs text-faint">overdue</p>
+                    </div>
+                  ) : (
+                    <div className="text-right">
+                      <p className="text-sm font-semibold text-green">Paid</p>
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="flex items-end justify-between">
-                <div>
-                  <p className="text-lg font-bold text-ink font-mono">£{Number(invoice.amount_due).toLocaleString('en-GB', { minimumFractionDigits: 2 })}</p>
-                  {!invoice.contact_email && <p className="text-xs text-pop mt-1">No email — can&apos;t chase</p>}
-                </div>
-                <div className="text-right">
-                  <p className={`text-lg font-bold font-mono ${daysOverdue > 14 ? 'text-pop' : daysOverdue > 7 ? 'text-amber' : 'text-ink'}`}>{daysOverdue}d</p>
-                  <p className="text-xs text-faint">overdue</p>
-                </div>
-              </div>
-            </div>
+            </Link>
           )
         })}
       </div>
@@ -142,20 +148,8 @@ export default async function DashboardPage() {
 }
 
 function StatusPill({ status, chasingEnabled, hasEmail }: { status: string; chasingEnabled: boolean; hasEmail: boolean }) {
-  if (!hasEmail) {
-    return <span className="inline-block px-2.5 py-1 rounded-full text-xs font-semibold bg-pop-pale text-pop">No email</span>
-  }
-  const styles: Record<string, string> = {
-    open: chasingEnabled ? 'bg-indigo/10 text-indigo' : 'bg-cream text-faint',
-    paid: 'bg-green-pale text-green',
-    paused: 'bg-cream text-faint',
-    completed: 'bg-cream text-muted',
-  }
-  const labels: Record<string, string> = {
-    open: chasingEnabled ? 'Chasing' : 'Paused',
-    paid: 'Paid',
-    paused: 'Paused',
-    completed: 'Completed',
-  }
-  return <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${styles[status] || styles.open}`}>{labels[status] || status}</span>
+  if (status === 'paid') return <span className="inline-block px-2.5 py-1 rounded-full text-xs font-semibold bg-green-pale text-green">Paid</span>
+  if (status === 'completed') return <span className="inline-block px-2.5 py-1 rounded-full text-xs font-semibold bg-cream text-muted">Complete</span>
+  if (!hasEmail) return <span className="inline-block px-2.5 py-1 rounded-full text-xs font-semibold bg-pop-pale text-pop">No email</span>
+  return <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${chasingEnabled ? 'bg-indigo/10 text-indigo' : 'bg-cream text-faint'}`}>{chasingEnabled ? 'Chasing' : 'Paused'}</span>
 }
