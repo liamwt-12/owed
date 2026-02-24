@@ -40,7 +40,6 @@ async function refreshTokenIfNeeded(connection: any) {
 }
 
 export async function POST(request: Request) {
-  // Verify cron secret
   const authHeader = request.headers.get('authorization')
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -49,7 +48,6 @@ export async function POST(request: Request) {
   let body: any = {}
   try { body = await request.json() } catch {}
 
-  // If user_id provided, sync just that user. Otherwise sync all.
   const query = supabaseAdmin
     .from('connections')
     .select('*')
@@ -69,10 +67,10 @@ export async function POST(request: Request) {
   for (const connection of connections) {
     try {
       const accessToken = await refreshTokenIfNeeded(connection)
-      const today = new Date().toISOString().split('T')[0]
 
+      // Fetch ALL outstanding invoices (not just overdue)
       const invoicesRes = await fetch(
-        `https://api.xero.com/api.xro/2.0/Invoices?Type=ACCREC&Statuses=AUTHORISED,SUBMITTED&where=DueDate<DateTime(${today})&summaryOnly=false`,
+        `https://api.xero.com/api.xro/2.0/Invoices?Statuses=AUTHORISED&where=Type=="ACCREC"&&AmountDue>0`,
         {
           headers: {
             'Authorization': `Bearer ${accessToken}`,
@@ -83,15 +81,25 @@ export async function POST(request: Request) {
       )
 
       if (!invoicesRes.ok) {
-        console.error(`Xero API error for connection ${connection.id}:`, await invoicesRes.text())
+        const errText = await invoicesRes.text()
+        console.error(`Xero API error for connection ${connection.id}:`, errText)
         continue
       }
 
       const data = await invoicesRes.json()
       const xeroInvoices = data.Invoices || []
 
+      console.log(`Xero returned ${xeroInvoices.length} outstanding invoices for ${connection.tenant_name}`)
+
       for (const inv of xeroInvoices) {
-        await supabaseAdmin.from('invoices').upsert({
+        const dueDate = inv.DueDateString || inv.DueDate?.split('T')[0]
+        const isOverdue = new Date(dueDate) < new Date()
+
+        console.log(`Invoice ${inv.InvoiceNumber}: Due ${dueDate}, Amount £${inv.AmountDue}, Overdue: ${isOverdue}, Contact: ${inv.Contact?.Name}`)
+
+        if (!isOverdue) continue // Only track overdue invoices
+
+        const { error: upsertError } = await supabaseAdmin.from('invoices').upsert({
           user_id: connection.user_id,
           connection_id: connection.id,
           external_id: inv.InvoiceID,
@@ -100,55 +108,56 @@ export async function POST(request: Request) {
           contact_email: inv.Contact?.EmailAddress || null,
           amount_due: inv.AmountDue,
           currency: inv.CurrencyCode || 'GBP',
-          due_date: inv.DueDate?.split('T')[0],
+          due_date: dueDate,
           chasing_enabled: inv.Contact?.EmailAddress ? true : false,
           last_synced_at: new Date().toISOString(),
         }, {
           onConflict: 'connection_id,external_id',
         })
+
+        if (upsertError) {
+          console.error(`Failed to upsert invoice ${inv.InvoiceNumber}:`, upsertError)
+        }
       }
 
-      // Check for paid invoices
-      const paidRes = await fetch(
-        `https://api.xero.com/api.xro/2.0/Invoices?Type=ACCREC&Statuses=PAID`,
-        {
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Xero-Tenant-Id': connection.tenant_id,
-            'Accept': 'application/json',
-          },
-        }
-      )
+      // Check for paid invoices we were tracking
+      const { data: trackedInvoices } = await supabaseAdmin
+        .from('invoices')
+        .select('id, external_id, amount_due, status')
+        .eq('connection_id', connection.id)
+        .eq('status', 'open')
 
-      if (paidRes.ok) {
-        const paidData = await paidRes.json()
-        const paidInvoices = paidData.Invoices || []
+      if (trackedInvoices && trackedInvoices.length > 0) {
+        const paidRes = await fetch(
+          `https://api.xero.com/api.xro/2.0/Invoices?Statuses=PAID&where=Type=="ACCREC"`,
+          {
+            headers: {
+              'Authorization': `Bearer ${accessToken}`,
+              'Xero-Tenant-Id': connection.tenant_id,
+              'Accept': 'application/json',
+            },
+          }
+        )
 
-        for (const inv of paidInvoices) {
-          // Update invoice status if we were tracking it
-          const { data: existing } = await supabaseAdmin
-            .from('invoices')
-            .select('id, amount_due, status')
-            .eq('connection_id', connection.id)
-            .eq('external_id', inv.InvoiceID)
-            .eq('status', 'open')
-            .single()
+        if (paidRes.ok) {
+          const paidData = await paidRes.json()
+          const paidIds = new Set((paidData.Invoices || []).map((i: any) => i.InvoiceID))
 
-          if (existing) {
-            await supabaseAdmin.from('invoices').update({
-              status: 'paid',
-              last_synced_at: new Date().toISOString(),
-            }).eq('id', existing.id)
+          for (const tracked of trackedInvoices) {
+            if (paidIds.has(tracked.external_id)) {
+              await supabaseAdmin.from('invoices').update({
+                status: 'paid',
+                last_synced_at: new Date().toISOString(),
+              }).eq('id', tracked.id)
 
-            // Cancel pending chase emails
-            await supabaseAdmin.from('chase_emails').update({
-              status: 'cancelled',
-            }).eq('invoice_id', existing.id).eq('status', 'scheduled')
+              await supabaseAdmin.from('chase_emails').update({
+                status: 'cancelled',
+              }).eq('invoice_id', tracked.id).eq('status', 'scheduled')
 
-            // Increment platform stats
-            await supabaseAdmin.rpc('increment_recovered', {
-              amount: existing.amount_due,
-            })
+              await supabaseAdmin.rpc('increment_recovered', {
+                amount: tracked.amount_due,
+              })
+            }
           }
         }
       }
