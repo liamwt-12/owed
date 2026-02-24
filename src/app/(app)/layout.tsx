@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import { LogoutButton } from './LogoutButton'
 
 export default async function AppLayout({
   children,
@@ -28,7 +29,6 @@ export default async function AppLayout({
 
   return (
     <div className="min-h-screen bg-paper">
-      {/* Desktop sidebar */}
       <aside className="hidden md:flex fixed left-0 top-0 bottom-0 w-[240px] bg-white border-r border-line p-6 flex-col">
         <Link href="/dashboard" className="font-syne font-extrabold text-lg text-ink flex items-center gap-2 mb-10">
           <span className="w-2 h-2 bg-pop rounded-full" />
@@ -43,19 +43,21 @@ export default async function AppLayout({
           {subscription?.status === 'trialing' && subscription?.trial_ends_at && (
             <p className="text-xs text-faint mt-1">Trial ends {new Date(subscription.trial_ends_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</p>
           )}
+          <LogoutButton />
         </div>
       </aside>
 
-      {/* Mobile top bar */}
       <header className="md:hidden fixed top-0 left-0 right-0 bg-white border-b border-line px-4 py-3 flex items-center justify-between z-50">
         <Link href="/dashboard" className="font-syne font-extrabold text-lg text-ink flex items-center gap-2">
           <span className="w-2 h-2 bg-pop rounded-full" />
           owed
         </Link>
-        <p className="text-xs text-muted truncate max-w-[150px]">{profile?.business_name || profile?.email}</p>
+        <div className="flex items-center gap-3">
+          <p className="text-xs text-muted truncate max-w-[120px]">{profile?.business_name || profile?.email}</p>
+          <LogoutButton />
+        </div>
       </header>
 
-      {/* Mobile bottom nav */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-line flex z-50">
         <Link href="/dashboard" className="flex-1 py-3 text-center text-xs font-semibold text-ink">
           <svg className="mx-auto mb-1" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
