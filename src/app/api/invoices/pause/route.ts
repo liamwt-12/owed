@@ -11,18 +11,21 @@ export async function POST(request: Request) {
 
   const { invoice_id } = await request.json()
 
-  await supabase
+  const { error } = await supabase
     .from('invoices')
-    .update({ chasing_enabled: false, status: 'paused' })
+    .update({ chasing_enabled: false })
     .eq('id', invoice_id)
     .eq('user_id', user.id)
 
-  // Cancel any scheduled emails
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+
+  // Cancel any scheduled chase emails
   await supabase
     .from('chase_emails')
     .update({ status: 'cancelled' })
     .eq('invoice_id', invoice_id)
-    .eq('user_id', user.id)
     .eq('status', 'scheduled')
 
   return NextResponse.json({ ok: true })
