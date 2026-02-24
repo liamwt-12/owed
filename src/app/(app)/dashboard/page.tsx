@@ -5,13 +5,6 @@ export default async function DashboardPage() {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const { data: invoices } = await supabase
-    .from('invoices')
-    .select('*')
-    .eq('user_id', user!.id)
-    .order('days_overdue', { ascending: false })
-
-  // Check if user has connected Xero
   const { data: connections } = await supabase
     .from('connections')
     .select('id')
@@ -36,6 +29,16 @@ export default async function DashboardPage() {
         </Link>
       </div>
     )
+  }
+
+  const { data: invoices, error } = await supabase
+    .from('invoices')
+    .select('*')
+    .eq('user_id', user!.id)
+    .order('due_date', { ascending: true })
+
+  if (error) {
+    console.error('Dashboard query error:', error)
   }
 
   if (!invoices || invoices.length === 0) {
@@ -72,52 +75,58 @@ export default async function DashboardPage() {
       </div>
 
       <div className="bg-white border border-line rounded-2xl overflow-hidden">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-line">
-              <th className="text-left px-5 py-3 text-xs font-semibold text-faint uppercase tracking-wider">Client</th>
-              <th className="text-left px-5 py-3 text-xs font-semibold text-faint uppercase tracking-wider">Invoice #</th>
-              <th className="text-right px-5 py-3 text-xs font-semibold text-faint uppercase tracking-wider">Amount</th>
-              <th className="text-left px-5 py-3 text-xs font-semibold text-faint uppercase tracking-wider">Due Date</th>
-              <th className="text-right px-5 py-3 text-xs font-semibold text-faint uppercase tracking-wider">Days Overdue</th>
-              <th className="text-left px-5 py-3 text-xs font-semibold text-faint uppercase tracking-wider">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {invoices.map((invoice) => (
-              <tr
-                key={invoice.id}
-                className="border-b border-line last:border-0 hover:bg-cream/50 transition-colors group"
-              >
-                <td className="px-5 py-4">
-                  <Link href={`/invoice/${invoice.id}`} className="text-sm font-medium text-ink hover:underline">
-                    {invoice.contact_name}
-                  </Link>
-                  {!invoice.contact_email && (
-                    <p className="text-xs text-pop mt-0.5">Missing email</p>
-                  )}
-                </td>
-                <td className="px-5 py-4 text-sm text-muted font-mono">
-                  {invoice.invoice_number || '—'}
-                </td>
-                <td className="px-5 py-4 text-sm font-semibold text-ink text-right font-mono">
-                  £{Number(invoice.amount_due).toLocaleString('en-GB', { minimumFractionDigits: 2 })}
-                </td>
-                <td className="px-5 py-4 text-sm text-muted">
-                  {new Date(invoice.due_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-                </td>
-                <td className="px-5 py-4 text-sm font-semibold text-right font-mono">
-                  <span className={invoice.days_overdue > 14 ? 'text-pop' : invoice.days_overdue > 7 ? 'text-amber' : 'text-ink'}>
-                    {invoice.days_overdue}
-                  </span>
-                </td>
-                <td className="px-5 py-4">
-                  <StatusPill status={invoice.status} chasingEnabled={invoice.chasing_enabled} />
-                </td>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-line">
+                <th className="text-left px-5 py-3 text-xs font-semibold text-faint uppercase tracking-wider">Client</th>
+                <th className="text-left px-5 py-3 text-xs font-semibold text-faint uppercase tracking-wider">Invoice #</th>
+                <th className="text-right px-5 py-3 text-xs font-semibold text-faint uppercase tracking-wider">Amount</th>
+                <th className="text-left px-5 py-3 text-xs font-semibold text-faint uppercase tracking-wider">Due Date</th>
+                <th className="text-right px-5 py-3 text-xs font-semibold text-faint uppercase tracking-wider">Days Overdue</th>
+                <th className="text-left px-5 py-3 text-xs font-semibold text-faint uppercase tracking-wider">Status</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {invoices.map((invoice) => {
+                const daysOverdue = Math.max(0, Math.floor((Date.now() - new Date(invoice.due_date).getTime()) / (1000 * 60 * 60 * 24)))
+
+                return (
+                  <tr
+                    key={invoice.id}
+                    className="border-b border-line last:border-0 hover:bg-cream/50 transition-colors"
+                  >
+                    <td className="px-5 py-4">
+                      <span className="text-sm font-medium text-ink">
+                        {invoice.contact_name}
+                      </span>
+                      {!invoice.contact_email && (
+                        <p className="text-xs text-pop mt-0.5">Missing email</p>
+                      )}
+                    </td>
+                    <td className="px-5 py-4 text-sm text-muted font-mono">
+                      {invoice.invoice_number || '—'}
+                    </td>
+                    <td className="px-5 py-4 text-sm font-semibold text-ink text-right font-mono">
+                      £{Number(invoice.amount_due).toLocaleString('en-GB', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td className="px-5 py-4 text-sm text-muted">
+                      {new Date(invoice.due_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </td>
+                    <td className="px-5 py-4 text-sm font-semibold text-right font-mono">
+                      <span className={daysOverdue > 14 ? 'text-pop' : daysOverdue > 7 ? 'text-amber' : 'text-ink'}>
+                        {daysOverdue}
+                      </span>
+                    </td>
+                    <td className="px-5 py-4">
+                      <StatusPill status={invoice.status} chasingEnabled={invoice.chasing_enabled} />
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   )
