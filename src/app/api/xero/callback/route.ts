@@ -9,7 +9,6 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${origin}/onboarding/connect?error=no_code`)
   }
 
-  // Exchange code for tokens
   const tokenRes = await fetch('https://identity.xero.com/connect/token', {
     method: 'POST',
     headers: {
@@ -32,15 +31,13 @@ export async function GET(request: Request) {
 
   const tokens = await tokenRes.json()
 
-  // Get connected tenants
   const tenantsRes = await fetch('https://api.xero.com/connections', {
     headers: { 'Authorization': `Bearer ${tokens.access_token}` },
   })
 
   const tenants = await tenantsRes.json()
-  const tenant = tenants[0] // Use first org for v1
+  const tenant = tenants[0]
 
-  // Save connection
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -48,31 +45,54 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${origin}/login`)
   }
 
-  const { error } = await supabase.from('connections').upsert({
-    user_id: user.id,
-    provider: 'xero',
-    access_token: tokens.access_token,
-    refresh_token: tokens.refresh_token,
-    token_expires_at: new Date(Date.now() + tokens.expires_in * 1000).toISOString(),
-    tenant_id: tenant.tenantId,
-    tenant_name: tenant.tenantName,
-    updated_at: new Date().toISOString(),
-  }, {
-    onConflict: 'user_id',
-    ignoreDuplicates: false,
-  })
+  // Check if connection already exists
+  const { data: existing } = await supabase
+    .from('connections')
+    .select('id')
+    .eq('user_id', user.id)
+    .eq('provider', 'xero')
+    .single()
 
-  if (error) {
-    console.error('Failed to save Xero connection:', error)
+  let saveError
+
+  if (existing) {
+    const { error } = await supabase.from('connections').update({
+      access_token: tokens.access_token,
+      refresh_token: tokens.refresh_token,
+      token_expires_at: new Date(Date.now() + tokens.expires_in * 1000).toISOString(),
+      tenant_id: tenant.tenantId,
+      tenant_name: tenant.tenantName,
+      updated_at: new Date().toISOString(),
+    }).eq('id', existing.id)
+    saveError = error
+  } else {
+    const { error } = await supabase.from('connections').insert({
+      user_id: user.id,
+      provider: 'xero',
+      access_token: tokens.access_token,
+      refresh_token: tokens.refresh_token,
+      token_expires_at: new Date(Date.now() + tokens.expires_in * 1000).toISOString(),
+      tenant_id: tenant.tenantId,
+      tenant_name: tenant.tenantName,
+    })
+    saveError = error
+  }
+
+  if (saveError) {
+    console.error('Failed to save Xero connection:', saveError)
     return NextResponse.redirect(`${origin}/onboarding/connect?error=save_failed`)
   }
 
   // Trigger initial sync
-  await fetch(`${origin}/api/xero/sync`, {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${process.env.CRON_SECRET}` },
-    body: JSON.stringify({ user_id: user.id }),
-  })
+  try {
+    await fetch(`${origin}/api/xero/sync`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${process.env.CRON_SECRET}` },
+      body: JSON.stringify({ user_id: user.id }),
+    })
+  } catch (e) {
+    console.error('Initial sync failed:', e)
+  }
 
   return NextResponse.redirect(`${origin}/onboarding/found`)
 }
