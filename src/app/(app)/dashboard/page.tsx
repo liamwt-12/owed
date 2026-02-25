@@ -32,6 +32,27 @@ export default async function DashboardPage() {
 
   if (error) console.error('Dashboard query error:', error)
 
+  // Get recent open tracking events (last 7 days)
+  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+  const { data: recentOpens } = await supabase
+    .from('chase_emails')
+    .select('opened_at, invoice_id, invoices!inner(contact_name, id)')
+    .eq('invoices.user_id', user!.id)
+    .not('opened_at', 'is', null)
+    .gte('opened_at', weekAgo)
+    .order('opened_at', { ascending: false })
+    .limit(3)
+
+  // Get recent paid (last 7 days)
+  const { data: recentPaid } = await supabase
+    .from('invoice_activity')
+    .select('created_at, note, invoice_id')
+    .eq('user_id', user!.id)
+    .eq('type', 'paid')
+    .gte('created_at', weekAgo)
+    .order('created_at', { ascending: false })
+    .limit(3)
+
   if (!invoices || invoices.length === 0) {
     return (
       <div>
@@ -50,8 +71,43 @@ export default async function DashboardPage() {
   const pausedCount = openInvoices.filter(inv => !inv.chasing_enabled).length
   const paidCount = invoices.filter(inv => inv.status === 'paid').length
 
+  // Deduplicate opens by invoice
+  const seenInvoices = new Set<string>()
+  const uniqueOpens = (recentOpens || []).filter(o => {
+    const inv = (o as any).invoices
+    if (!inv || seenInvoices.has(inv.id)) return false
+    seenInvoices.add(inv.id)
+    return true
+  })
+
   return (
     <div>
+      {/* Activity notifications */}
+      {(uniqueOpens.length > 0 || (recentPaid && recentPaid.length > 0)) && (
+        <div className="mb-6 flex flex-col gap-2">
+          {recentPaid?.map((p) => (
+            <Link key={p.invoice_id} href={`/invoice/${p.invoice_id}`} className="block bg-green-pale border border-green/20 rounded-xl px-4 py-3 hover:border-green/40 transition-colors">
+              <div className="flex items-center gap-2">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1A6644" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <p className="text-sm text-green font-medium">{p.note}</p>
+              </div>
+            </Link>
+          ))}
+          {uniqueOpens.map((o) => {
+            const inv = (o as any).invoices
+            return (
+              <Link key={o.invoice_id} href={`/invoice/${o.invoice_id}`} className="block bg-amber-pale border border-amber/20 rounded-xl px-4 py-3 hover:border-amber/40 transition-colors">
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-amber rounded-full" />
+                  <p className="text-sm text-ink"><span className="font-medium">{inv?.contact_name}</span> <span className="text-muted">opened your reminder</span></p>
+                  <p className="text-xs text-faint ml-auto">{new Date(o.opened_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</p>
+                </div>
+              </Link>
+            )
+          })}
+        </div>
+      )}
+
       <div className="mb-6">
         <h1 className="font-syne font-extrabold text-2xl text-ink tracking-tight mb-1">Invoices</h1>
         <p className="text-muted text-sm">
@@ -97,7 +153,7 @@ export default async function DashboardPage() {
                     {invoice.status !== 'paid' ? <span className={daysOverdue > 14 ? 'text-pop' : daysOverdue > 7 ? 'text-amber' : 'text-ink'}>{daysOverdue}</span> : <span className="text-green">—</span>}
                   </td>
                   <td className="px-5 py-4">
-                    <StatusPill status={invoice.status} chasingEnabled={invoice.chasing_enabled} hasEmail={!!invoice.contact_email} />
+                    <StatusPill status={invoice.status} chasingEnabled={invoice.chasing_enabled} hasEmail={!!invoice.contact_email} pauseReason={invoice.pause_reason} />
                   </td>
                 </tr>
               )
@@ -118,7 +174,7 @@ export default async function DashboardPage() {
                     <p className="text-[15px] font-semibold text-ink truncate">{invoice.contact_name}</p>
                     <p className="text-xs text-muted font-mono mt-0.5">{invoice.invoice_number || '—'}</p>
                   </div>
-                  <StatusPill status={invoice.status} chasingEnabled={invoice.chasing_enabled} hasEmail={!!invoice.contact_email} />
+                  <StatusPill status={invoice.status} chasingEnabled={invoice.chasing_enabled} hasEmail={!!invoice.contact_email} pauseReason={invoice.pause_reason} />
                 </div>
                 <div className="flex items-end justify-between">
                   <div>
@@ -147,9 +203,10 @@ export default async function DashboardPage() {
   )
 }
 
-function StatusPill({ status, chasingEnabled, hasEmail }: { status: string; chasingEnabled: boolean; hasEmail: boolean }) {
+function StatusPill({ status, chasingEnabled, hasEmail, pauseReason }: { status: string; chasingEnabled: boolean; hasEmail: boolean; pauseReason?: string | null }) {
   if (status === 'paid') return <span className="inline-block px-2.5 py-1 rounded-full text-xs font-semibold bg-green-pale text-green">Paid</span>
   if (status === 'completed') return <span className="inline-block px-2.5 py-1 rounded-full text-xs font-semibold bg-cream text-muted">Complete</span>
   if (!hasEmail) return <span className="inline-block px-2.5 py-1 rounded-full text-xs font-semibold bg-pop-pale text-pop">No email</span>
+  if (pauseReason === 'replied') return <span className="inline-block px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-pale text-amber">Replied</span>
   return <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${chasingEnabled ? 'bg-indigo/10 text-indigo' : 'bg-cream text-faint'}`}>{chasingEnabled ? 'Chasing' : 'Paused'}</span>
 }
