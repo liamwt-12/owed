@@ -39,6 +39,16 @@ async function refreshTokenIfNeeded(connection: any) {
   return tokens.access_token
 }
 
+function extractPhone(contact: any): string | null {
+  if (!contact?.Phones) return null
+  for (const phone of contact.Phones) {
+    const number = [phone.PhoneCountryCode, phone.PhoneAreaCode, phone.PhoneNumber]
+      .filter(Boolean).join(' ').trim()
+    if (number) return number
+  }
+  return null
+}
+
 export async function POST(request: Request) {
   const authHeader = request.headers.get('authorization')
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
@@ -63,12 +73,12 @@ export async function POST(request: Request) {
   }
 
   let synced = 0
+  let newPaid = 0
 
   for (const connection of connections) {
     try {
       const accessToken = await refreshTokenIfNeeded(connection)
 
-      // Fetch ALL outstanding invoices (not just overdue)
       const invoicesRes = await fetch(
         `https://api.xero.com/api.xro/2.0/Invoices?Statuses=AUTHORISED&where=Type=="ACCREC"&&AmountDue>0`,
         {
@@ -81,8 +91,7 @@ export async function POST(request: Request) {
       )
 
       if (!invoicesRes.ok) {
-        const errText = await invoicesRes.text()
-        console.error(`Xero API error for connection ${connection.id}:`, errText)
+        console.error(`Xero API error for connection ${connection.id}:`, await invoicesRes.text())
         continue
       }
 
@@ -95,9 +104,9 @@ export async function POST(request: Request) {
         const dueDate = inv.DueDateString || inv.DueDate?.split('T')[0]
         const isOverdue = new Date(dueDate) < new Date()
 
-        console.log(`Invoice ${inv.InvoiceNumber}: Due ${dueDate}, Amount £${inv.AmountDue}, Overdue: ${isOverdue}, Contact: ${inv.Contact?.Name}`)
+        if (!isOverdue) continue
 
-        if (!isOverdue) continue // Only track overdue invoices
+        const contactPhone = extractPhone(inv.Contact)
 
         const { error: upsertError } = await supabaseAdmin.from('invoices').upsert({
           user_id: connection.user_id,
@@ -106,6 +115,7 @@ export async function POST(request: Request) {
           invoice_number: inv.InvoiceNumber,
           contact_name: inv.Contact?.Name || 'Unknown',
           contact_email: inv.Contact?.EmailAddress || null,
+          contact_phone: contactPhone,
           amount_due: inv.AmountDue,
           currency: inv.CurrencyCode || 'GBP',
           due_date: dueDate,
@@ -120,10 +130,10 @@ export async function POST(request: Request) {
         }
       }
 
-      // Check for paid invoices we were tracking
+      // Detect paid invoices
       const { data: trackedInvoices } = await supabaseAdmin
         .from('invoices')
-        .select('id, external_id, amount_due, status')
+        .select('id, external_id, amount_due, status, user_id')
         .eq('connection_id', connection.id)
         .eq('status', 'open')
 
@@ -147,6 +157,7 @@ export async function POST(request: Request) {
             if (paidIds.has(tracked.external_id)) {
               await supabaseAdmin.from('invoices').update({
                 status: 'paid',
+                chasing_enabled: false,
                 last_synced_at: new Date().toISOString(),
               }).eq('id', tracked.id)
 
@@ -154,9 +165,23 @@ export async function POST(request: Request) {
                 status: 'cancelled',
               }).eq('invoice_id', tracked.id).eq('status', 'scheduled')
 
-              await supabaseAdmin.rpc('increment_recovered', {
-                amount: tracked.amount_due,
+              // Log activity
+              await supabaseAdmin.from('invoice_activity').insert({
+                invoice_id: tracked.id,
+                user_id: tracked.user_id,
+                type: 'paid',
+                note: 'Payment detected via Xero sync',
               })
+
+              try {
+                await supabaseAdmin.rpc('increment_recovered', {
+                  amount: tracked.amount_due,
+                })
+              } catch (e) {
+                console.error('Failed to increment recovery:', e)
+              }
+
+              newPaid++
             }
           }
         }
@@ -168,5 +193,5 @@ export async function POST(request: Request) {
     }
   }
 
-  return NextResponse.json({ synced, total: connections.length })
+  return NextResponse.json({ synced, total: connections.length, newPaid })
 }
