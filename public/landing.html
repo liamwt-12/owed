@@ -157,11 +157,11 @@ nav {
   font-family: 'Instrument Serif', serif;
   font-weight: 400;
   color: var(--pop);
-  letter-spacing: -1px;
+  letter-spacing: -0.02em;
 }
 
 .hero-subtitle {
-  font-size: 18px;
+  font-size: clamp(16px, 1.2vw, 18px);
   color: var(--muted);
   line-height: 1.6;
   margin-bottom: 36px;
@@ -454,7 +454,7 @@ nav {
   font-style: italic;
   font-family: 'Instrument Serif', serif;
   font-weight: 400;
-  letter-spacing: -0.5px;
+  letter-spacing: -0.015em;
 }
 
 /* ─── THOUGHT CARDS ─── */
@@ -484,7 +484,7 @@ nav {
   font-size: 17px;
   font-style: italic;
   color: var(--ink);
-  line-height: 1.5;
+  line-height: 1.55;
   margin-bottom: 16px;
 }
 
@@ -536,7 +536,7 @@ nav {
 .step-body {
   font-size: 14px;
   color: var(--muted);
-  line-height: 1.6;
+  line-height: 1.65;
 }
 
 /* ─── SEQUENCE VISUAL ─── */
@@ -664,7 +664,7 @@ nav {
 .stat-body {
   font-size: 14px;
   color: var(--muted);
-  line-height: 1.5;
+  line-height: 1.55;
 }
 
 .stat-source {
@@ -904,7 +904,8 @@ footer {
 }
 
 @media (max-width: 600px) {
-  .hero-title { font-size: 36px; }
+  .hero-title { font-size: 36px; line-height: 1.08; }
+  .hero-subtitle { max-width: 100%; }
   .hero-actions { flex-direction: column; align-items: flex-start; gap: 10px; }
   .nav-links a:not(.nav-cta) { display: none; }
 }
