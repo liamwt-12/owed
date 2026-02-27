@@ -46,6 +46,40 @@ async function refreshTokenIfNeeded(connection: any): Promise<string | null> {
   return tokens.access_token
 }
 
+async function fetchAllXeroInvoices(
+  baseUrl: string,
+  accessToken: string,
+  tenantId: string,
+): Promise<any[]> {
+  const all: any[] = []
+  let page = 1
+
+  while (true) {
+    const separator = baseUrl.includes('?') ? '&' : '?'
+    const res = await fetch(`${baseUrl}${separator}page=${page}`, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Xero-Tenant-Id': tenantId,
+        'Accept': 'application/json',
+      },
+    })
+
+    if (!res.ok) {
+      if (page === 1) throw new Error(`Xero API error: ${res.status}`)
+      break
+    }
+
+    const data = await res.json()
+    const invoices = data.Invoices || []
+    all.push(...invoices)
+
+    if (invoices.length < 100) break
+    page++
+  }
+
+  return all
+}
+
 function extractPhone(contact: any): string | null {
   if (!contact?.Phones) return null
   for (const phone of contact.Phones) {
@@ -92,6 +126,9 @@ export async function POST(request: Request) {
   let synced = 0
   let newPaid = 0
 
+  // Pre-fetch user emails for payment notifications
+  const userEmails: Record<string, string> = {}
+
   for (const connection of connections) {
     try {
       const accessToken = await refreshTokenIfNeeded(connection)
@@ -101,24 +138,17 @@ export async function POST(request: Request) {
         continue
       }
 
-      const invoicesRes = await fetch(
-        `https://api.xero.com/api.xro/2.0/Invoices?Statuses=AUTHORISED&where=Type=="ACCREC"&&AmountDue>0`,
-        {
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Xero-Tenant-Id': connection.tenant_id,
-            'Accept': 'application/json',
-          },
-        }
-      )
-
-      if (!invoicesRes.ok) {
-        console.error(`Xero API error for connection ${connection.id}:`, await invoicesRes.text())
+      let xeroInvoices: any[]
+      try {
+        xeroInvoices = await fetchAllXeroInvoices(
+          `https://api.xero.com/api.xro/2.0/Invoices?Statuses=AUTHORISED&where=Type=="ACCREC"&&AmountDue>0`,
+          accessToken,
+          connection.tenant_id,
+        )
+      } catch (e) {
+        console.error(`Xero API error for connection ${connection.id}:`, e)
         continue
       }
-
-      const data = await invoicesRes.json()
-      const xeroInvoices = data.Invoices || []
 
       console.log(`Xero returned ${xeroInvoices.length} outstanding invoices for ${connection.tenant_name}`)
 
@@ -169,46 +199,34 @@ export async function POST(request: Request) {
       // Detect paid invoices
       const { data: trackedInvoices } = await supabaseAdmin
         .from('invoices')
-        .select('id, external_id, amount_due, status, user_id')
+        .select('id, external_id, amount_due, invoice_number, contact_name, status, user_id')
         .eq('connection_id', connection.id)
         .eq('status', 'open')
 
       if (trackedInvoices && trackedInvoices.length > 0) {
-        // Check for paid invoices
-        const paidRes = await fetch(
-          `https://api.xero.com/api.xro/2.0/Invoices?Statuses=PAID&where=Type=="ACCREC"`,
-          {
-            headers: {
-              'Authorization': `Bearer ${accessToken}`,
-              'Xero-Tenant-Id': connection.tenant_id,
-              'Accept': 'application/json',
-            },
-          }
-        )
-
-        // Check for voided invoices
-        const voidedRes = await fetch(
-          `https://api.xero.com/api.xro/2.0/Invoices?Statuses=VOIDED&where=Type=="ACCREC"`,
-          {
-            headers: {
-              'Authorization': `Bearer ${accessToken}`,
-              'Xero-Tenant-Id': connection.tenant_id,
-              'Accept': 'application/json',
-            },
-          }
-        )
-
         const paidIds = new Set<string>()
         const voidedIds = new Set<string>()
 
-        if (paidRes.ok) {
-          const paidData = await paidRes.json()
-          for (const i of (paidData.Invoices || [])) paidIds.add(i.InvoiceID)
+        try {
+          const paidInvoices = await fetchAllXeroInvoices(
+            `https://api.xero.com/api.xro/2.0/Invoices?Statuses=PAID&where=Type=="ACCREC"`,
+            accessToken,
+            connection.tenant_id,
+          )
+          for (const i of paidInvoices) paidIds.add(i.InvoiceID)
+        } catch (e) {
+          console.error(`Failed to fetch paid invoices for ${connection.id}:`, e)
         }
 
-        if (voidedRes.ok) {
-          const voidedData = await voidedRes.json()
-          for (const i of (voidedData.Invoices || [])) voidedIds.add(i.InvoiceID)
+        try {
+          const voidedInvoices = await fetchAllXeroInvoices(
+            `https://api.xero.com/api.xro/2.0/Invoices?Statuses=VOIDED&where=Type=="ACCREC"`,
+            accessToken,
+            connection.tenant_id,
+          )
+          for (const i of voidedInvoices) voidedIds.add(i.InvoiceID)
+        } catch (e) {
+          console.error(`Failed to fetch voided invoices for ${connection.id}:`, e)
         }
 
         for (const tracked of trackedInvoices) {
@@ -243,6 +261,42 @@ export async function POST(request: Request) {
               } catch (e) {
                 console.error('Failed to increment recovery:', e)
               }
+
+              // Send payment notification email to user
+              try {
+                if (!userEmails[tracked.user_id]) {
+                  const { data: profile } = await supabaseAdmin
+                    .from('profiles')
+                    .select('email')
+                    .eq('id', tracked.user_id)
+                    .single()
+                  if (profile) userEmails[tracked.user_id] = profile.email
+                }
+                const userEmail = userEmails[tracked.user_id]
+                if (userEmail) {
+                  const paidAmount = `\u00a3${Number(tracked.amount_due).toLocaleString('en-GB', { minimumFractionDigits: 2 })}`
+                  const invNumber = tracked.invoice_number || 'an invoice'
+                  await fetch('https://api.resend.com/emails', {
+                    method: 'POST',
+                    headers: {
+                      'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                      from: process.env.RESEND_FROM_EMAIL || 'accounts@owedhq.com',
+                      to: userEmail,
+                      subject: `Invoice ${invNumber} has been paid`,
+                      html: `<p>Good news — Invoice #${invNumber} for ${paidAmount} to ${tracked.contact_name || 'your client'} has been paid.</p>
+<p>We detected the payment via Xero and have stopped all chase emails for this invoice.</p>
+<p style="margin-top:24px">— Owed</p>
+<p style="color:#999;font-size:12px;margin-top:32px;border-top:1px solid #eee;padding-top:16px">Payment notification from Owed · <a href="https://owedhq.com/dashboard" style="color:#999">View dashboard</a></p>`,
+                    }),
+                  })
+                }
+              } catch (e) {
+                console.error('Failed to send payment notification:', e)
+              }
+
               newPaid++
             }
           }

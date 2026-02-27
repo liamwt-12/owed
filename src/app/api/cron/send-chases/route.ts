@@ -3,11 +3,22 @@ import { NextResponse } from 'next/server'
 
 const STAGE_DELAYS = [0, 0, 6, 7, 7]
 
-function getEmailContent(stage: number, invoice: any, businessName: string) {
-  const contact = invoice.contact_name.split(' ')[0]
-  const amount = `£${Number(invoice.amount_due).toLocaleString('en-GB', { minimumFractionDigits: 2 })}`
-  const number = invoice.invoice_number || 'your invoice'
-  const dueDate = new Date(invoice.due_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+function getEmailContent(stage: number, invoice: any, businessName: string, unsubscribeUrl: string) {
+  const contact = escapeHtml(invoice.contact_name?.split(' ')[0] || 'there')
+  const amount = escapeHtml(`£${Number(invoice.amount_due).toLocaleString('en-GB', { minimumFractionDigits: 2 })}`)
+  const number = escapeHtml(invoice.invoice_number || 'your invoice')
+  const dueDate = escapeHtml(new Date(invoice.due_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }))
+  const safeBusiness = escapeHtml(businessName)
+  const footer = `<p style="color:#999;font-size:12px;margin-top:32px;border-top:1px solid #eee;padding-top:16px">Sent on behalf of ${safeBusiness} · Powered by Owed · <a href="${unsubscribeUrl}" style="color:#999">Unsubscribe</a></p>`
 
   switch (stage) {
     case 1:
@@ -17,8 +28,8 @@ function getEmailContent(stage: number, invoice: any, businessName: string) {
 <p>Just a quick note that invoice ${number} for ${amount} was due on ${dueDate}.</p>
 <p>If you've already sent payment, please ignore this — and thank you.</p>
 <p>If not, do let us know if you have any questions.</p>
-<p>Many thanks,<br>${businessName}</p>
-<p style="color:#999;font-size:12px;margin-top:32px;border-top:1px solid #eee;padding-top:16px">Sent on behalf of ${businessName} · Powered by Owed</p>`,
+<p>Many thanks,<br>${safeBusiness}</p>
+${footer}`,
       }
     case 2:
       return {
@@ -26,8 +37,8 @@ function getEmailContent(stage: number, invoice: any, businessName: string) {
         html: `<p>Hi ${contact},</p>
 <p>Following up on invoice ${number} for ${amount}, which remains outstanding.</p>
 <p>Could you let me know when we can expect payment, or if there's anything we can help resolve on our end?</p>
-<p>Thanks,<br>${businessName}</p>
-<p style="color:#999;font-size:12px;margin-top:32px;border-top:1px solid #eee;padding-top:16px">Sent on behalf of ${businessName} · Powered by Owed</p>`,
+<p>Thanks,<br>${safeBusiness}</p>
+${footer}`,
       }
     case 3:
       return {
@@ -35,8 +46,8 @@ function getEmailContent(stage: number, invoice: any, businessName: string) {
         html: `<p>Hi ${contact},</p>
 <p>Invoice ${number} for ${amount} is now significantly overdue. We'd appreciate confirmation of payment within 5 working days.</p>
 <p>If there's an issue with this invoice, please reply and we'll be happy to discuss.</p>
-<p>Regards,<br>${businessName}</p>
-<p style="color:#999;font-size:12px;margin-top:32px;border-top:1px solid #eee;padding-top:16px">Sent on behalf of ${businessName} · Powered by Owed</p>`,
+<p>Regards,<br>${safeBusiness}</p>
+${footer}`,
       }
     case 4:
       return {
@@ -45,8 +56,8 @@ function getEmailContent(stage: number, invoice: any, businessName: string) {
 <p>This is a final reminder regarding invoice ${number} for ${amount}.</p>
 <p>If payment is not received shortly, we may need to consider further action in line with our terms.</p>
 <p>We'd strongly prefer to resolve this directly — please reply or arrange payment at your earliest convenience.</p>
-<p>${businessName}</p>
-<p style="color:#999;font-size:12px;margin-top:32px;border-top:1px solid #eee;padding-top:16px">Sent on behalf of ${businessName} · Powered by Owed</p>`,
+<p>${safeBusiness}</p>
+${footer}`,
       }
     default:
       return { subject: '', html: '' }
@@ -142,7 +153,11 @@ export async function GET(request: Request) {
       const businessName = profile?.business_name || 'Our records'
       const replyTo = profile?.email
 
-      const { subject, html } = getEmailContent(nextStage, invoice, businessName)
+      // Generate unsubscribe token from invoice ID (base64url-encoded)
+      const unsubscribeToken = Buffer.from(invoice.id).toString('base64url')
+      const unsubscribeUrl = `https://www.owedhq.com/unsubscribe?token=${unsubscribeToken}`
+
+      const { subject, html } = getEmailContent(nextStage, invoice, businessName, unsubscribeUrl)
 
       const resendRes = await fetch('https://api.resend.com/emails', {
         method: 'POST',
@@ -156,6 +171,10 @@ export async function GET(request: Request) {
           reply_to: replyTo,
           subject,
           html,
+          headers: {
+            'List-Unsubscribe': `<${unsubscribeUrl}>`,
+            'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+          },
         }),
       })
 

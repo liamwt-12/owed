@@ -35,11 +35,13 @@ export async function GET(request: Request) {
         .eq('user_id', profile.id)
         .eq('status', 'open')
 
+      // Only show invoices that completed their chase sequence this week
       const { data: completedInvoices } = await supabaseAdmin
         .from('invoices')
-        .select('id, contact_name, amount_due')
+        .select('id, contact_name, amount_due, last_synced_at')
         .eq('user_id', profile.id)
         .eq('status', 'completed')
+        .gte('last_synced_at', weekAgo)
 
       const chasingCount = openInvoices?.filter(i => i.chasing_enabled).length || 0
       const totalOutstanding = openInvoices?.reduce((sum, i) => sum + Number(i.amount_due), 0) || 0

@@ -39,6 +39,16 @@ export async function POST(request: Request) {
     .eq('invoice_id', invoice_id)
     .eq('status', 'scheduled')
 
+  // Log activity for timeline
+  await supabase
+    .from('invoice_activity')
+    .insert({
+      invoice_id,
+      user_id: user.id,
+      type: 'marked_paid',
+      note: 'Manually marked as paid',
+    })
+
   try {
     await supabaseAdmin.rpc('increment_recovered', {
       amount: invoice.amount_due,

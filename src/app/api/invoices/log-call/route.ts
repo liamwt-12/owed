@@ -11,13 +11,25 @@ export async function POST(request: Request) {
 
   const { invoice_id, contact_name } = await request.json()
 
+  // Verify invoice belongs to this user
+  const { data: invoice } = await supabase
+    .from('invoices')
+    .select('id')
+    .eq('id', invoice_id)
+    .eq('user_id', user.id)
+    .single()
+
+  if (!invoice) {
+    return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
+  }
+
   await supabase
     .from('invoice_activity')
     .insert({
       invoice_id,
       user_id: user.id,
       type: 'call',
-      note: `Called ${contact_name}`,
+      note: `Called ${contact_name || 'contact'}`,
     })
 
   return NextResponse.json({ ok: true })

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unsubscribed — Owed</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --ink: #0F0E0C;
+  --muted: #6E6B63;
+  --paper: #FAF9F6;
+  --pop: #E8420E;
+}
+body {
+  font-family: 'Instrument Sans', sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.container {
+  max-width: 480px;
+  text-align: center;
+}
+.dot {
+  width: 12px;
+  height: 12px;
+  background: var(--pop);
+  border-radius: 50%;
+  margin: 0 auto 24px;
+}
+h1 {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 24px;
+  margin-bottom: 12px;
+}
+p {
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="dot"></div>
+  <h1>You've been unsubscribed</h1>
+  <p>You won't receive any more payment reminders for this invoice. If you believe this was a mistake, please contact the sender directly.</p>
+  <p style="font-size:13px; margin-top:24px;">Powered by <a href="https://www.owedhq.com" style="color:var(--ink); font-weight:600; text-decoration:none;">Owed</a></p>
+</div>
+</body>
+</html>

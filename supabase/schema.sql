@@ -181,7 +181,7 @@ create table public.invoice_activity (
   id uuid primary key default gen_random_uuid(),
   invoice_id uuid references public.invoices not null,
   user_id uuid references public.profiles not null,
-  type text not null check (type in ('chase_sent','paid','voided','paused','resumed','manual_note')),
+  type text not null check (type in ('chase_sent','paid','voided','paused','resumed','manual_note','marked_paid','call')),
   note text,
   created_at timestamptz default now()
 );
