@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Late Payment Interest Calculator (UK) | Owed</title>
+<meta name="description" content="Calculate interest and compensation owed on overdue invoices under the Late Payment of Commercial Debts Act 1998. Free UK late payment calculator.">
+<link rel="canonical" href="https://www.owedhq.com/calculator.html">
+
+<!-- Open Graph -->
+<meta property="og:title" content="Late Payment Interest Calculator (UK) | Owed">
+<meta property="og:description" content="Calculate interest and compensation owed on overdue invoices under the Late Payment of Commercial Debts Act 1998. Free UK late payment calculator.">
+<meta property="og:url" content="https://www.owedhq.com/calculator.html">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://www.owedhq.com/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&amp;family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400;1,500&amp;family=Instrument+Serif:ital@0;1&amp;display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --ink: #0F0E0C; --ink-2: #2A2925; --muted: #6E6B63; --faint: #B5B2AA;
+  --paper: #FAF9F6; --cream: #F2EFE8; --line: #E4E0D8;
+  --pop: #E8420E; --pop-pale: #FEF0EB;
+  --green: #1A6644; --green-pale: #E8F5EE;
+  --amber: #D4820A; --amber-pale: #FDF3E3;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { font-family: 'Instrument Sans', sans-serif; background: var(--paper); color: var(--ink); overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+
+/* Nav */
+nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; padding: 0 40px; height: 60px; display: flex; align-items: center; justify-content: space-between; background: rgba(250,249,246,0.9); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
+.nav-logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 18px; letter-spacing: -0.5px; color: var(--ink); display: flex; align-items: center; gap: 8px; text-decoration: none; }
+.nav-logo-dot { width: 8px; height: 8px; background: var(--pop); border-radius: 50%; }
+.nav-links { display: flex; align-items: center; gap: 28px; list-style: none; }
+.nav-links a { font-size: 14px; color: var(--muted); text-decoration: none; font-weight: 500; transition: color 0.15s; }
+.nav-links a:hover { color: var(--ink); }
+.nav-cta { background: var(--ink) !important; color: var(--paper) !important; padding: 8px 18px; border-radius: 6px; font-weight: 600 !important; font-size: 13.5px !important; transition: background 0.15s !important; }
+.nav-cta:hover { background: var(--ink-2) !important; }
+
+/* Footer */
+footer { padding: 32px 40px; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--line); max-width: 1200px; margin: 0 auto; }
+.footer-logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 15px; color: var(--ink); }
+.footer-links { display: flex; gap: 24px; list-style: none; flex-wrap: wrap; }
+.footer-links a { font-size: 13px; color: var(--faint); text-decoration: none; transition: color 0.15s; }
+.footer-links a:hover { color: var(--ink); }
+.footer-copy { font-size: 12px; color: var(--faint); }
+
+/* Main content */
+.main { max-width: 720px; margin: 0 auto; padding: 120px 24px 64px; }
+
+.section-label {
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--faint);
+  margin-bottom: 16px;
+}
+
+h1 {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  font-size: clamp(30px, 4vw, 46px);
+  line-height: 1.1;
+  margin-bottom: 16px;
+}
+
+h2 {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+}
+
+.subtitle {
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--muted);
+  margin-bottom: 36px;
+  max-width: 620px;
+}
+
+/* Calculator card */
+.calc-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 32px;
+}
+
+.input-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.input-group { display: flex; flex-direction: column; }
+
+.input-group label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 6px;
+  display: block;
+}
+
+.input-group input {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-family: inherit;
+  font-size: 15px;
+  width: 100%;
+  background: var(--paper);
+  color: var(--ink);
+  transition: border-color 0.15s;
+}
+
+.input-group input:focus {
+  border-color: var(--ink);
+  outline: none;
+}
+
+.input-group input.error {
+  border-color: var(--pop);
+}
+
+.error-msg {
+  font-size: 12px;
+  color: var(--pop);
+  margin-top: 6px;
+  display: none;
+}
+
+.error-msg.visible {
+  display: block;
+}
+
+.calc-btn {
+  width: 100%;
+  background: var(--ink);
+  color: var(--paper);
+  padding: 14px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  border: none;
+  transition: background 0.15s;
+}
+
+.calc-btn:hover {
+  background: var(--ink-2);
+}
+
+/* Results */
+.results {
+  display: none;
+}
+
+.results.visible {
+  display: block;
+}
+
+.results-divider {
+  border: none;
+  border-top: 1px solid var(--line);
+  margin: 24px 0;
+}
+
+.result-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+}
+
+.result-label {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.result-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.result-row.grand-total {
+  padding-top: 16px;
+  margin-top: 8px;
+  border-top: 1px solid var(--line);
+}
+
+.result-row.grand-total .result-label {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 20px;
+  color: var(--ink);
+}
+
+.result-row.grand-total .result-value {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 20px;
+  color: var(--pop);
+}
+
+/* Explainer */
+.explainer {
+  margin-top: 56px;
+}
+
+.explainer h2 {
+  font-size: clamp(22px, 3vw, 30px);
+  margin-bottom: 24px;
+}
+
+.explainer p {
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--muted);
+  margin-bottom: 20px;
+}
+
+/* CTA box */
+.cta-box {
+  background: var(--cream);
+  border-radius: 14px;
+  padding: 28px 32px;
+  margin-top: 32px;
+}
+
+.cta-box .cta-heading {
+  font-family: 'Syne', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+
+.cta-box p {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.6;
+  margin-bottom: 14px;
+}
+
+.cta-box a {
+  color: var(--pop);
+  font-weight: 600;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.cta-box a:hover {
+  text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  nav { padding: 0 20px; }
+  footer { flex-direction: column; gap: 16px; text-align: center; padding: 24px 20px; }
+}
+
+@media (max-width: 600px) {
+  .nav-links a:not(.nav-cta) { display: none; }
+  .footer-links { justify-content: center; }
+  .input-grid { grid-template-columns: 1fr; }
+  .calc-card { padding: 24px; }
+  .main { padding: 100px 16px 48px; }
+}
+</style>
+
+<!-- JSON-LD FAQPage Schema -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How much interest can I charge on a late invoice in the UK?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Under the Late Payment of Commercial Debts (Interest) Act 1998, you can charge interest at 8% above the Bank of England base rate on overdue invoices. With the current base rate at 4.5%, the total statutory interest rate is 12.5% per annum. Interest accrues daily from the day after the agreed payment date."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the fixed compensation for late payment?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "In addition to interest, the Act entitles you to a fixed sum as compensation for the cost of recovering the debt. The amount depends on the size of the debt: £40 for debts up to £999.99, £70 for debts between £1,000 and £9,999.99, and £100 for debts of £10,000 or more."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does the Late Payment Act apply to my business?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The Late Payment of Commercial Debts (Interest) Act 1998 applies to business-to-business (B2B) transactions in England, Wales, Scotland, and Northern Ireland. It covers contracts for the supply of goods or services where both parties are acting in the course of a business. It does not apply to consumer debts or transactions where one party is a private individual."
+      }
+    }
+  ]
+}
+</script>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo"><div class="nav-logo-dot"></div>owed</a>
+  <ul class="nav-links">
+    <li><a href="/login">Log in</a></li>
+    <li><a href="/signup" class="nav-cta">Start free trial</a></li>
+  </ul>
+</nav>
+
+<main class="main">
+  <div class="section-label">Free tool</div>
+  <h1>Late Payment Interest Calculator</h1>
+  <p class="subtitle">Calculate the interest and fixed compensation you're legally entitled to under the Late Payment of Commercial Debts (Interest) Act 1998.</p>
+
+  <div class="calc-card">
+    <div class="input-grid">
+      <div class="input-group">
+        <label for="invoice-amount">Invoice amount (&pound;)</label>
+        <input type="number" id="invoice-amount" step="0.01" min="0" placeholder="e.g. 2500.00">
+      </div>
+      <div class="input-group">
+        <label for="due-date">Invoice due date</label>
+        <input type="date" id="due-date">
+      </div>
+      <div class="input-group">
+        <label for="calc-date">Calculation date</label>
+        <input type="date" id="calc-date">
+      </div>
+    </div>
+
+    <button class="calc-btn" id="calculate-btn">Calculate</button>
+
+    <div class="error-msg" id="error-msg"></div>
+
+    <div class="results" id="results">
+      <hr class="results-divider">
+      <div class="result-row">
+        <span class="result-label">Days overdue</span>
+        <span class="result-value" id="r-days">—</span>
+      </div>
+      <div class="result-row">
+        <span class="result-label">Daily interest rate</span>
+        <span class="result-value" id="r-rate">—</span>
+      </div>
+      <div class="result-row">
+        <span class="result-label">Interest owed</span>
+        <span class="result-value" id="r-interest">—</span>
+      </div>
+      <div class="result-row">
+        <span class="result-label">Fixed compensation</span>
+        <span class="result-value" id="r-compensation">—</span>
+      </div>
+      <div class="result-row grand-total">
+        <span class="result-label">Total owed</span>
+        <span class="result-value" id="r-total">—</span>
+      </div>
+    </div>
+  </div>
+
+  <section class="explainer">
+    <h2>Your rights under the Late Payment Act</h2>
+
+    <p>The Late Payment of Commercial Debts (Interest) Act 1998 gives UK businesses the statutory right to charge interest on overdue invoices. This applies to business-to-business transactions &mdash; it does not cover consumer debts or transactions where one party is a private individual.</p>
+
+    <p>You can charge interest at 8% above the Bank of England base rate. With the current base rate at 4.5%, the total statutory interest rate is 12.5% per annum. Interest accrues daily from the day after the agreed payment date, and continues to accrue until the debt is paid in full.</p>
+
+    <p>In addition to interest, you're entitled to a fixed sum as compensation for the cost of recovering the debt. The amount depends on the size of the outstanding invoice: &pound;40 for debts up to &pound;999.99, &pound;70 for debts between &pound;1,000 and &pound;9,999.99, and &pound;100 for debts of &pound;10,000 or more.</p>
+
+    <p>These rights exist specifically because late payment is a serious problem for UK businesses. But calculating and claiming interest doesn't actually get your invoice paid any faster. Knowing what you're owed is one thing &mdash; collecting it is another.</p>
+
+    <div class="cta-box">
+      <div class="cta-heading">Or skip the maths.</div>
+      <p>Owed chases your invoices automatically so you get paid on time. Connect Xero, and professional follow-ups go out in your name until the money arrives.</p>
+      <a href="/signup">Start free &mdash; 14 days &rarr;</a>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="footer-logo">owed</div>
+  <ul class="footer-links">
+    <li><a href="/calculator.html">Interest calculator</a></li>
+    <li><a href="/for-accountants.html">For accountants</a></li>
+    <li><a href="/email-templates.html">Email templates</a></li>
+    <li><a href="/privacy">Privacy</a></li>
+    <li><a href="/terms">Terms</a></li>
+  </ul>
+  <div class="footer-copy">&copy; 2025 Owed &middot; Built in the UK &#x1F1EC;&#x1F1E7;</div>
+</footer>
+
+<script>
+(function() {
+  // Set calculation date to today by default
+  var today = new Date();
+  var yyyy = today.getFullYear();
+  var mm = String(today.getMonth() + 1).padStart(2, '0');
+  var dd = String(today.getDate()).padStart(2, '0');
+  document.getElementById('calc-date').value = yyyy + '-' + mm + '-' + dd;
+
+  var BASE_RATE = 4.5;
+  var STATUTORY_RATE = 8;
+  var ANNUAL_RATE = (BASE_RATE + STATUTORY_RATE) / 100; // 0.125
+  var DAILY_RATE = ANNUAL_RATE / 365;
+
+  document.getElementById('calculate-btn').addEventListener('click', function() {
+    var amountEl = document.getElementById('invoice-amount');
+    var dueDateEl = document.getElementById('due-date');
+    var calcDateEl = document.getElementById('calc-date');
+    var errorEl = document.getElementById('error-msg');
+    var resultsEl = document.getElementById('results');
+
+    // Reset error states
+    amountEl.classList.remove('error');
+    dueDateEl.classList.remove('error');
+    calcDateEl.classList.remove('error');
+    errorEl.classList.remove('visible');
+    errorEl.textContent = '';
+    resultsEl.classList.remove('visible');
+
+    var amount = parseFloat(amountEl.value);
+    var dueDate = dueDateEl.value ? new Date(dueDateEl.value) : null;
+    var calcDate = calcDateEl.value ? new Date(calcDateEl.value) : null;
+
+    // Validation
+    if (!amount || amount <= 0) {
+      amountEl.classList.add('error');
+      errorEl.textContent = 'Please enter a valid invoice amount.';
+      errorEl.classList.add('visible');
+      return;
+    }
+
+    if (!dueDate) {
+      dueDateEl.classList.add('error');
+      errorEl.textContent = 'Please enter the invoice due date.';
+      errorEl.classList.add('visible');
+      return;
+    }
+
+    if (!calcDate) {
+      calcDateEl.classList.add('error');
+      errorEl.textContent = 'Please enter the calculation date.';
+      errorEl.classList.add('visible');
+      return;
+    }
+
+    if (dueDate >= calcDate) {
+      dueDateEl.classList.add('error');
+      errorEl.textContent = 'The invoice is not yet overdue. The due date must be before the calculation date.';
+      errorEl.classList.add('visible');
+      return;
+    }
+
+    // Calculate days overdue
+    var msPerDay = 1000 * 60 * 60 * 24;
+    var daysOverdue = Math.floor((calcDate - dueDate) / msPerDay);
+
+    // Calculate interest
+    var interest = amount * DAILY_RATE * daysOverdue;
+
+    // Calculate fixed compensation
+    var compensation;
+    if (amount >= 10000) {
+      compensation = 100;
+    } else if (amount >= 1000) {
+      compensation = 70;
+    } else {
+      compensation = 40;
+    }
+
+    var total = interest + compensation;
+
+    // Display results
+    document.getElementById('r-days').textContent = daysOverdue;
+    document.getElementById('r-rate').textContent = (DAILY_RATE * 100).toFixed(4) + '%';
+    document.getElementById('r-interest').textContent = '\u00A3' + interest.toFixed(2);
+    document.getElementById('r-compensation').textContent = '\u00A3' + compensation.toFixed(2);
+    document.getElementById('r-total').textContent = '\u00A3' + total.toFixed(2);
+
+    resultsEl.classList.add('visible');
+  });
+})();
+</script>
+
+</body>
+</html>
