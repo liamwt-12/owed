@@ -1,12 +1,22 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
+  const state = searchParams.get('state')
 
   if (!code) {
     return NextResponse.redirect(`${origin}/onboarding/connect?error=no_code`)
+  }
+
+  // CSRF: validate state parameter
+  const storedState = cookies().get('xero_oauth_state')?.value
+  cookies().delete('xero_oauth_state')
+
+  if (!state || !storedState || state !== storedState) {
+    return NextResponse.redirect(`${origin}/onboarding/connect?error=invalid_state`)
   }
 
   const tokenRes = await fetch('https://identity.xero.com/connect/token', {

@@ -46,6 +46,8 @@ create table public.connections (
   token_expires_at timestamptz not null,
   tenant_id text,
   tenant_name text,
+  token_expired boolean default false,
+  disconnected_at timestamptz,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
@@ -78,14 +80,16 @@ create table public.invoices (
   invoice_number text,
   contact_name text not null,
   contact_email text,
+  contact_phone text,
   amount_due numeric(12,2) not null,
   currency text default 'GBP',
   due_date date not null,
   days_overdue int generated always as (
     greatest(0, current_date - due_date)
   ) stored,
-  status text default 'open' check (status in ('open','paid','paused','completed')),
+  status text default 'open' check (status in ('open','paid','paused','completed','voided')),
   chasing_enabled boolean default true,
+  pause_reason text,
   last_synced_at timestamptz default now(),
   created_at timestamptz default now(),
   unique(connection_id, external_id)
@@ -172,7 +176,28 @@ create policy "Anyone can read platform stats"
 insert into public.platform_stats (id) values (1);
 
 
--- 7. Helper function: increment recovered amount
+-- 7. Invoice activity log
+create table public.invoice_activity (
+  id uuid primary key default gen_random_uuid(),
+  invoice_id uuid references public.invoices not null,
+  user_id uuid references public.profiles not null,
+  type text not null check (type in ('chase_sent','paid','voided','paused','resumed','manual_note')),
+  note text,
+  created_at timestamptz default now()
+);
+
+alter table public.invoice_activity enable row level security;
+
+create policy "Users can view own invoice_activity"
+  on public.invoice_activity for select
+  using (auth.uid() = user_id);
+
+create policy "Users can insert own invoice_activity"
+  on public.invoice_activity for insert
+  with check (auth.uid() = user_id);
+
+
+-- 8. Helper function: increment recovered amount
 create or replace function increment_recovered(amount numeric)
 returns void as $$
   update platform_stats

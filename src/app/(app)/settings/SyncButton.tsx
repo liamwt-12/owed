@@ -5,20 +5,27 @@ import { useRouter } from 'next/navigation'
 
 export function SyncButton() {
   const [syncing, setSyncing] = useState(false)
-  const [done, setDone] = useState(false)
+  const [status, setStatus] = useState<'idle' | 'done' | 'error'>('idle')
   const router = useRouter()
 
   async function handleSync() {
     setSyncing(true)
-    await fetch('/api/xero/sync', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({}),
-    })
-    setSyncing(false)
-    setDone(true)
-    router.refresh()
-    setTimeout(() => setDone(false), 3000)
+    setStatus('idle')
+    try {
+      const res = await fetch('/api/xero/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      })
+      if (!res.ok) throw new Error('Sync failed')
+      setStatus('done')
+      router.refresh()
+    } catch {
+      setStatus('error')
+    } finally {
+      setSyncing(false)
+      setTimeout(() => setStatus('idle'), 3000)
+    }
   }
 
   return (
@@ -27,7 +34,7 @@ export function SyncButton() {
       disabled={syncing}
       className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-cream text-muted hover:bg-line hover:text-ink transition-colors"
     >
-      {syncing ? 'Syncing...' : done ? 'Synced' : 'Sync now'}
+      {syncing ? 'Syncing...' : status === 'done' ? 'Synced' : status === 'error' ? 'Sync failed' : 'Sync now'}
     </button>
   )
 }

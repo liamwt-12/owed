@@ -1,7 +1,7 @@
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
 
-async function refreshTokenIfNeeded(connection: any) {
+async function refreshTokenIfNeeded(connection: any): Promise<string | null> {
   const expiresAt = new Date(connection.token_expires_at)
   const fiveMinutesFromNow = new Date(Date.now() + 5 * 60 * 1000)
 
@@ -24,7 +24,13 @@ async function refreshTokenIfNeeded(connection: any) {
   })
 
   if (!tokenRes.ok) {
-    throw new Error('Token refresh failed')
+    console.error(`Token refresh failed for connection ${connection.id}:`, await tokenRes.text())
+    // Mark connection as needing reconnection
+    await supabaseAdmin.from('connections').update({
+      token_expired: true,
+      updated_at: new Date().toISOString(),
+    }).eq('id', connection.id)
+    return null
   }
 
   const tokens = await tokenRes.json()
@@ -33,6 +39,7 @@ async function refreshTokenIfNeeded(connection: any) {
     access_token: tokens.access_token,
     refresh_token: tokens.refresh_token,
     token_expires_at: new Date(Date.now() + tokens.expires_in * 1000).toISOString(),
+    token_expired: false,
     updated_at: new Date().toISOString(),
   }).eq('id', connection.id)
 
@@ -51,17 +58,27 @@ function extractPhone(contact: any): string | null {
 
 export async function POST(request: Request) {
   const authHeader = request.headers.get('authorization')
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const isCron = authHeader === `Bearer ${process.env.CRON_SECRET}` && process.env.CRON_SECRET
 
   let body: any = {}
   try { body = await request.json() } catch {}
+
+  // Allow authenticated users to sync their own data
+  if (!isCron) {
+    const { createClient } = await import('@/lib/supabase/server')
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    body.user_id = user.id
+  }
 
   const query = supabaseAdmin
     .from('connections')
     .select('*')
     .eq('provider', 'xero')
+    .is('disconnected_at', null)
 
   if (body.user_id) {
     query.eq('user_id', body.user_id)
@@ -78,6 +95,11 @@ export async function POST(request: Request) {
   for (const connection of connections) {
     try {
       const accessToken = await refreshTokenIfNeeded(connection)
+
+      if (!accessToken) {
+        console.log(`Skipping connection ${connection.id}: token expired, needs reconnection`)
+        continue
+      }
 
       const invoicesRes = await fetch(
         `https://api.xero.com/api.xro/2.0/Invoices?Statuses=AUTHORISED&where=Type=="ACCREC"&&AmountDue>0`,
@@ -108,7 +130,15 @@ export async function POST(request: Request) {
 
         const contactPhone = extractPhone(inv.Contact)
 
-        const { error: upsertError } = await supabaseAdmin.from('invoices').upsert({
+        // Check if invoice already exists (to avoid overwriting chasing_enabled)
+        const { data: existingInv } = await supabaseAdmin
+          .from('invoices')
+          .select('id')
+          .eq('connection_id', connection.id)
+          .eq('external_id', inv.InvoiceID)
+          .single()
+
+        const invoiceData: any = {
           user_id: connection.user_id,
           connection_id: connection.id,
           external_id: inv.InvoiceID,
@@ -119,9 +149,15 @@ export async function POST(request: Request) {
           amount_due: inv.AmountDue,
           currency: inv.CurrencyCode || 'GBP',
           due_date: dueDate,
-          chasing_enabled: inv.Contact?.EmailAddress ? true : false,
           last_synced_at: new Date().toISOString(),
-        }, {
+        }
+
+        // Only set chasing_enabled on first insert
+        if (!existingInv) {
+          invoiceData.chasing_enabled = !!inv.Contact?.EmailAddress
+        }
+
+        const { error: upsertError } = await supabaseAdmin.from('invoices').upsert(invoiceData, {
           onConflict: 'connection_id,external_id',
         })
 
@@ -138,6 +174,7 @@ export async function POST(request: Request) {
         .eq('status', 'open')
 
       if (trackedInvoices && trackedInvoices.length > 0) {
+        // Check for paid invoices
         const paidRes = await fetch(
           `https://api.xero.com/api.xro/2.0/Invoices?Statuses=PAID&where=Type=="ACCREC"`,
           {
@@ -149,30 +186,56 @@ export async function POST(request: Request) {
           }
         )
 
+        // Check for voided invoices
+        const voidedRes = await fetch(
+          `https://api.xero.com/api.xro/2.0/Invoices?Statuses=VOIDED&where=Type=="ACCREC"`,
+          {
+            headers: {
+              'Authorization': `Bearer ${accessToken}`,
+              'Xero-Tenant-Id': connection.tenant_id,
+              'Accept': 'application/json',
+            },
+          }
+        )
+
+        const paidIds = new Set<string>()
+        const voidedIds = new Set<string>()
+
         if (paidRes.ok) {
           const paidData = await paidRes.json()
-          const paidIds = new Set((paidData.Invoices || []).map((i: any) => i.InvoiceID))
+          for (const i of (paidData.Invoices || [])) paidIds.add(i.InvoiceID)
+        }
 
-          for (const tracked of trackedInvoices) {
-            if (paidIds.has(tracked.external_id)) {
-              await supabaseAdmin.from('invoices').update({
-                status: 'paid',
-                chasing_enabled: false,
-                last_synced_at: new Date().toISOString(),
-              }).eq('id', tracked.id)
+        if (voidedRes.ok) {
+          const voidedData = await voidedRes.json()
+          for (const i of (voidedData.Invoices || [])) voidedIds.add(i.InvoiceID)
+        }
 
-              await supabaseAdmin.from('chase_emails').update({
-                status: 'cancelled',
-              }).eq('invoice_id', tracked.id).eq('status', 'scheduled')
+        for (const tracked of trackedInvoices) {
+          const isPaid = paidIds.has(tracked.external_id)
+          const isVoided = voidedIds.has(tracked.external_id)
 
-              // Log activity
-              await supabaseAdmin.from('invoice_activity').insert({
-                invoice_id: tracked.id,
-                user_id: tracked.user_id,
-                type: 'paid',
-                note: 'Payment detected via Xero sync',
-              })
+          if (isPaid || isVoided) {
+            const newStatus = isPaid ? 'paid' : 'voided'
 
+            await supabaseAdmin.from('invoices').update({
+              status: newStatus,
+              chasing_enabled: false,
+              last_synced_at: new Date().toISOString(),
+            }).eq('id', tracked.id)
+
+            await supabaseAdmin.from('chase_emails').update({
+              status: 'cancelled',
+            }).eq('invoice_id', tracked.id).eq('status', 'scheduled')
+
+            await supabaseAdmin.from('invoice_activity').insert({
+              invoice_id: tracked.id,
+              user_id: tracked.user_id,
+              type: newStatus,
+              note: `${isPaid ? 'Payment' : 'Voided'} detected via Xero sync`,
+            })
+
+            if (isPaid) {
               try {
                 await supabaseAdmin.rpc('increment_recovered', {
                   amount: tracked.amount_due,
@@ -180,7 +243,6 @@ export async function POST(request: Request) {
               } catch (e) {
                 console.error('Failed to increment recovery:', e)
               }
-
               newPaid++
             }
           }

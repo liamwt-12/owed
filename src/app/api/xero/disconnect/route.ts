@@ -9,10 +9,15 @@ export async function POST() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  // Delete connection
+  // Soft-delete: clear tokens and mark disconnected (preserves FK for invoices)
   await supabase
     .from('connections')
-    .delete()
+    .update({
+      access_token: '',
+      refresh_token: '',
+      disconnected_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
     .eq('user_id', user.id)
 
   // Cancel all scheduled chase emails

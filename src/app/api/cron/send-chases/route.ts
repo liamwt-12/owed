@@ -55,7 +55,7 @@ function getEmailContent(stage: number, invoice: any, businessName: string) {
 
 export async function GET(request: Request) {
   const authHeader = request.headers.get('authorization')
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!process.env.CRON_SECRET || authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -63,12 +63,32 @@ export async function GET(request: Request) {
   let completed = 0
   let errors = 0
 
+  // Only chase for users with active subscription or valid trial
+  const { data: activeUserIds } = await supabaseAdmin
+    .from('subscriptions')
+    .select('user_id')
+    .or('status.eq.active,status.eq.trialing')
+
+  const allowedUserIds = (activeUserIds || [])
+    .filter((s: any) => {
+      if (s.status === 'trialing' && s.trial_ends_at) {
+        return new Date(s.trial_ends_at) > new Date()
+      }
+      return true
+    })
+    .map((s: any) => s.user_id)
+
+  if (allowedUserIds.length === 0) {
+    return NextResponse.json({ sent: 0, message: 'No active subscriptions' })
+  }
+
   const { data: invoices } = await supabaseAdmin
     .from('invoices')
     .select('*, profiles!inner(email, business_name)')
     .eq('status', 'open')
     .eq('chasing_enabled', true)
     .not('contact_email', 'is', null)
+    .in('user_id', allowedUserIds)
 
   if (!invoices || invoices.length === 0) {
     return NextResponse.json({ sent: 0, message: 'No invoices to chase' })

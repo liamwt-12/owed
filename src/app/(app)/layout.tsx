@@ -27,6 +27,26 @@ export default async function AppLayout({
     .eq('user_id', user.id)
     .single()
 
+  // Paywall: redirect if no subscription, expired trial, or cancelled
+  const isActive = subscription?.status === 'active'
+  const isTrialing = subscription?.status === 'trialing' &&
+    subscription?.trial_ends_at &&
+    new Date(subscription.trial_ends_at) > new Date()
+
+  if (!isActive && !isTrialing) {
+    redirect('/upgrade')
+  }
+
+  // Check for expired Xero connection
+  const { data: connection } = await supabase
+    .from('connections')
+    .select('token_expired')
+    .eq('user_id', user.id)
+    .is('disconnected_at', null)
+    .single()
+
+  const needsReconnect = connection?.token_expired === true
+
   return (
     <div className="min-h-screen bg-paper">
       <aside className="hidden md:flex fixed left-0 top-0 bottom-0 w-[240px] bg-white border-r border-line p-6 flex-col">
@@ -70,6 +90,12 @@ export default async function AppLayout({
       </nav>
 
       <main className="md:ml-[240px] pt-14 pb-20 px-4 md:pt-0 md:pb-0 md:px-8 md:py-8">
+        {needsReconnect && (
+          <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-center justify-between">
+            <p className="text-sm text-amber-800">Your Xero connection has expired. Reconnect to keep syncing invoices.</p>
+            <a href="/api/xero/connect" className="text-sm font-semibold text-amber-900 hover:underline ml-4 shrink-0">Reconnect</a>
+          </div>
+        )}
         {children}
       </main>
     </div>
