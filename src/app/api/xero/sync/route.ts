@@ -295,15 +295,7 @@ export async function POST(request: Request) {
                     ? Math.max(1, Math.floor((Date.now() - new Date(firstChase).getTime()) / (1000 * 60 * 60 * 24)))
                     : 0
 
-                  // Increment user's total_recovered and get new value
-                  await supabaseAdmin
-                    .from('profiles')
-                    .update({
-                      total_recovered: supabaseAdmin.rpc ? undefined : 0, // handled below
-                    })
-                    .eq('id', tracked.user_id)
-
-                  // Use raw SQL increment via rpc or manual calculation
+                  // Increment user's total_recovered: read current value then update
                   const { data: currentProfile } = await supabaseAdmin
                     .from('profiles')
                     .select('total_recovered')
