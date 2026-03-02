@@ -126,8 +126,9 @@ export async function POST(request: Request) {
   let synced = 0
   let newPaid = 0
 
-  // Pre-fetch user emails for payment notifications
+  // Pre-fetch user profiles for payment notifications and thank-you emails
   const userEmails: Record<string, string> = {}
+  const userProfiles: Record<string, any> = {}
 
   for (const connection of connections) {
     try {
@@ -267,10 +268,13 @@ export async function POST(request: Request) {
                 if (!userEmails[tracked.user_id]) {
                   const { data: profile } = await supabaseAdmin
                     .from('profiles')
-                    .select('email')
+                    .select('email, business_name, thank_you_enabled')
                     .eq('id', tracked.user_id)
                     .single()
-                  if (profile) userEmails[tracked.user_id] = profile.email
+                  if (profile) {
+                    userEmails[tracked.user_id] = profile.email
+                    userProfiles[tracked.user_id] = profile
+                  }
                 }
                 const userEmail = userEmails[tracked.user_id]
                 if (userEmail) {
@@ -335,6 +339,54 @@ export async function POST(request: Request) {
                 }
               } catch (e) {
                 console.error('Failed to send payment notification:', e)
+              }
+
+              // Send thank-you email to client if enabled
+              try {
+                const prof = userProfiles[tracked.user_id]
+                if (prof?.thank_you_enabled && tracked.contact_email) {
+                  // Check if already sent
+                  const { data: existing } = await supabaseAdmin
+                    .from('invoice_activity')
+                    .select('id')
+                    .eq('invoice_id', tracked.id)
+                    .eq('type', 'thank_you_sent')
+                    .limit(1)
+
+                  if (!existing || existing.length === 0) {
+                    const contactFirst = (tracked.contact_name || '').split(' ')[0] || 'there'
+                    const senderName = prof.business_name || 'Us'
+                    const invNum = tracked.invoice_number || 'your invoice'
+                    const fromEmail = process.env.RESEND_FROM_EMAIL || 'accounts@owedhq.com'
+
+                    await fetch('https://api.resend.com/emails', {
+                      method: 'POST',
+                      headers: {
+                        'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify({
+                        from: `${senderName} <${fromEmail}>`,
+                        to: tracked.contact_email,
+                        reply_to: prof.email,
+                        subject: 'Thanks for your payment',
+                        html: `<p>Hi ${contactFirst},</p>
+<p>Just a quick note to say thanks for settling invoice ${invNum}. Really appreciate it.</p>
+<p>Looking forward to working together again.</p>
+<p>${senderName}</p>`,
+                      }),
+                    })
+
+                    await supabaseAdmin.from('invoice_activity').insert({
+                      invoice_id: tracked.id,
+                      user_id: tracked.user_id,
+                      type: 'thank_you_sent',
+                      note: `Thank-you email sent to ${tracked.contact_name}`,
+                    })
+                  }
+                }
+              } catch (e) {
+                console.error('Failed to send thank-you email:', e)
               }
 
               newPaid++

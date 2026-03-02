@@ -12,6 +12,7 @@ create table public.profiles (
   statutory_interest_enabled boolean default false,
   payment_link text,
   total_recovered numeric(14,2) default 0,
+  thank_you_enabled boolean default false,
   created_at timestamptz default now()
 );
 
@@ -20,6 +21,7 @@ create table public.profiles (
 -- ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS statutory_interest_enabled boolean DEFAULT false;
 -- ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS payment_link text;
 -- ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS total_recovered numeric(14,2) DEFAULT 0;
+-- ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS thank_you_enabled boolean DEFAULT false;
 
 alter table public.profiles enable row level security;
 
@@ -191,7 +193,7 @@ create table public.invoice_activity (
   id uuid primary key default gen_random_uuid(),
   invoice_id uuid references public.invoices not null,
   user_id uuid references public.profiles not null,
-  type text not null check (type in ('chase_sent','paid','voided','paused','resumed','manual_note','marked_paid','call')),
+  type text not null check (type in ('chase_sent','paid','voided','paused','resumed','manual_note','marked_paid','call','reply','thank_you_sent')),
   note text,
   created_at timestamptz default now()
 );

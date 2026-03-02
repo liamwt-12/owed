@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { SettingsForm } from './SettingsForm'
 import { SyncButton } from './SyncButton'
 import { DisconnectButton } from './DisconnectButton'
+import { ManageBillingButton } from './ManageBillingButton'
 
 export default async function SettingsPage() {
   const supabase = createClient()
@@ -37,7 +38,7 @@ export default async function SettingsPage() {
       {totalRecovered > 0 && (
         <div className="bg-green text-white rounded-2xl p-6 mb-4">
           <p className="text-xs text-white/60 font-semibold uppercase tracking-wider mb-1">Total recovered</p>
-          <p className="font-syne font-extrabold text-3xl">£{totalRecovered.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</p>
+          <p className="font-syne font-extrabold text-3xl">&pound;{totalRecovered.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</p>
           <p className="text-sm text-white/60 mt-1">{invoices?.length} invoice{invoices?.length !== 1 ? 's' : ''} paid via Owed</p>
         </div>
       )}
@@ -50,6 +51,7 @@ export default async function SettingsPage() {
           email={profile?.email || user.email || ''}
           statutoryInterestEnabled={profile?.statutory_interest_enabled || false}
           paymentLink={profile?.payment_link || ''}
+          thankYouEnabled={profile?.thank_you_enabled || false}
         />
       </div>
 
@@ -74,8 +76,21 @@ export default async function SettingsPage() {
             </div>
           </div>
         ) : (
-          <a href="/onboarding/connect" className="text-sm text-ink font-medium hover:underline">Connect Xero →</a>
+          <a href="/onboarding/connect" className="text-sm text-ink font-medium hover:underline">Connect Xero &rarr;</a>
         )}
+      </div>
+
+      {/* Billing */}
+      <div className="bg-white border border-line rounded-2xl p-6 mb-4">
+        <h2 className="text-sm font-semibold text-ink mb-4">Billing</h2>
+        {totalRecovered > 0 && (
+          <div className="flex items-center gap-2 mb-4 px-3 py-2.5 bg-green-pale border border-green/15 rounded-lg">
+            <span className="w-1.5 h-1.5 bg-pop rounded-full flex-shrink-0" />
+            <p className="text-sm text-green font-medium">Since you started using Owed, you&apos;ve recovered &pound;{totalRecovered.toLocaleString('en-GB', { minimumFractionDigits: 2 })}.</p>
+          </div>
+        )}
+        <ManageBillingButton />
+        <p className="text-xs text-muted mt-2">View invoices, update payment method, or cancel.</p>
       </div>
 
       {/* Email preview */}
@@ -85,19 +100,18 @@ export default async function SettingsPage() {
         <div className="bg-paper border border-line rounded-xl p-5">
           <div className="flex items-center gap-2 mb-3">
             <div className="text-xs text-faint">From:</div>
-            <div className="text-xs text-ink font-medium">accounts@owedhq.com</div>
+            <div className="text-xs text-ink font-medium">{profile?.business_name || 'Your Business'} &lt;accounts@owedhq.com&gt;</div>
           </div>
           <div className="flex items-center gap-2 mb-3">
             <div className="text-xs text-faint">Reply-To:</div>
             <div className="text-xs text-ink font-medium">{profile?.email || user.email}</div>
           </div>
           <div className="border-t border-line pt-3 mt-1">
-            <p className="text-xs font-medium text-ink mb-2">Invoice INV-001 — Quick reminder</p>
+            <p className="text-xs font-medium text-ink mb-2">Invoice INV-001 &mdash; Quick reminder</p>
             <p className="text-xs text-muted leading-relaxed">
               Hi there,<br /><br />
-              Just a quick note that invoice INV-001 for £500.00 was due on 1 January 2026.<br /><br />
-              If you&apos;ve already sent payment, please ignore this — and thank you.<br /><br />
-              Many thanks,<br />
+              Just a quick note that invoice INV-001 for &pound;500.00 was due on 1 January 2026. If you&apos;ve already sent payment, please ignore this.<br /><br />
+              Thanks,<br />
               {profile?.business_name || 'Your Business'}
             </p>
             <p className="text-[10px] text-faint mt-4 pt-3 border-t border-line">

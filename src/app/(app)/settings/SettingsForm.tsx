@@ -8,15 +8,18 @@ export function SettingsForm({
   email,
   statutoryInterestEnabled,
   paymentLink,
+  thankYouEnabled,
 }: {
   businessName: string
   email: string
   statutoryInterestEnabled: boolean
   paymentLink: string
+  thankYouEnabled: boolean
 }) {
   const [name, setName] = useState(businessName)
   const [interestToggle, setInterestToggle] = useState(statutoryInterestEnabled)
   const [link, setLink] = useState(paymentLink)
+  const [thankYou, setThankYou] = useState(thankYouEnabled)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const router = useRouter()
@@ -24,7 +27,8 @@ export function SettingsForm({
   const hasChanges =
     name !== businessName ||
     interestToggle !== statutoryInterestEnabled ||
-    link !== paymentLink
+    link !== paymentLink ||
+    thankYou !== thankYouEnabled
 
   async function handleSave() {
     setSaving(true)
@@ -35,6 +39,7 @@ export function SettingsForm({
         business_name: name,
         statutory_interest_enabled: interestToggle,
         payment_link: link || null,
+        thank_you_enabled: thankYou,
       }),
     })
     setSaving(false)
@@ -73,7 +78,7 @@ export function SettingsForm({
       <p className="text-xs text-faint mb-4">If set, a &ldquo;Pay this invoice&rdquo; button will appear in every chase email.</p>
 
       {/* Statutory interest toggle */}
-      <div className="flex items-start gap-3 mb-6 p-3 bg-paper border border-line rounded-lg">
+      <div className="flex items-start gap-3 mb-3 p-3 bg-paper border border-line rounded-lg">
         <button
           type="button"
           role="switch"
@@ -86,6 +91,23 @@ export function SettingsForm({
         <div>
           <p className="text-sm font-medium text-ink">Include statutory interest reminder</p>
           <p className="text-xs text-muted mt-0.5">When enabled, stages 3 and 4 of the chase sequence will mention the interest and compensation owed under the Late Payment Act.</p>
+        </div>
+      </div>
+
+      {/* Thank you email toggle */}
+      <div className="flex items-start gap-3 mb-6 p-3 bg-paper border border-line rounded-lg">
+        <button
+          type="button"
+          role="switch"
+          aria-checked={thankYou}
+          onClick={() => setThankYou(!thankYou)}
+          className={`relative mt-0.5 inline-flex h-5 w-9 flex-shrink-0 cursor-pointer items-center rounded-full transition-colors ${thankYou ? 'bg-ink' : 'bg-line'}`}
+        >
+          <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow transition-transform ${thankYou ? 'translate-x-[18px]' : 'translate-x-[3px]'}`} />
+        </button>
+        <div>
+          <p className="text-sm font-medium text-ink">Send thank-you email when invoice is paid</p>
+          <p className="text-xs text-muted mt-0.5">When a payment is detected via Xero, automatically send a short thank-you note to your client.</p>
         </div>
       </div>
 

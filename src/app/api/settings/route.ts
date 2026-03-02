@@ -26,6 +26,9 @@ export async function POST(request: Request) {
   if ('payment_link' in body) {
     updates.payment_link = body.payment_link || null
   }
+  if ('thank_you_enabled' in body) {
+    updates.thank_you_enabled = !!body.thank_you_enabled
+  }
 
   if (Object.keys(updates).length === 0) {
     return NextResponse.json({ ok: true })
