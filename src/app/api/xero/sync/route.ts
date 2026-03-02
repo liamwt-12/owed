@@ -200,7 +200,7 @@ export async function POST(request: Request) {
       // Detect paid invoices
       const { data: trackedInvoices } = await supabaseAdmin
         .from('invoices')
-        .select('id, external_id, amount_due, invoice_number, contact_name, status, user_id')
+        .select('id, external_id, amount_due, invoice_number, contact_name, contact_email, status, user_id')
         .eq('connection_id', connection.id)
         .eq('status', 'open')
 
