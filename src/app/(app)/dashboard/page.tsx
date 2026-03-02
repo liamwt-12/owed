@@ -58,8 +58,11 @@ export default async function DashboardPage() {
       <div>
         <h1 className="font-syne font-extrabold text-2xl text-ink tracking-tight mb-2">Invoices</h1>
         <div className="mt-8 text-center py-16 bg-white border border-line rounded-2xl">
-          <p className="text-muted text-[15px]">No overdue invoices. Enjoy it.</p>
-          <p className="text-faint text-sm mt-2">Nothing to chase right now. We&apos;re watching.</p>
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <span className="w-2 h-2 bg-pop rounded-full" />
+            <p className="text-ink font-semibold text-[15px]">No overdue invoices right now. That&apos;s a good thing.</p>
+          </div>
+          <p className="text-faint text-sm">Nothing to chase. We&apos;re watching and will start the moment something goes overdue.</p>
         </div>
       </div>
     )

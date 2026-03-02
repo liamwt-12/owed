@@ -289,7 +289,7 @@ h2 {
       "name": "How much interest can I charge on a late invoice in the UK?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Under the Late Payment of Commercial Debts (Interest) Act 1998, you can charge interest at 8% above the Bank of England base rate on overdue invoices. With the current base rate at 4.5%, the total statutory interest rate is 12.5% per annum. Interest accrues daily from the day after the agreed payment date."
+        "text": "Under the Late Payment of Commercial Debts (Interest) Act 1998, you can charge interest at 8% above the Bank of England base rate on overdue invoices. With the current base rate at 3.75%, the total statutory interest rate is 11.75% per annum. Interest accrues daily from the day after the agreed payment date."
       }
     },
     {
@@ -377,7 +377,7 @@ h2 {
 
     <p>The Late Payment of Commercial Debts (Interest) Act 1998 gives UK businesses the statutory right to charge interest on overdue invoices. This applies to business-to-business transactions &mdash; it does not cover consumer debts or transactions where one party is a private individual.</p>
 
-    <p>You can charge interest at 8% above the Bank of England base rate. With the current base rate at 4.5%, the total statutory interest rate is 12.5% per annum. Interest accrues daily from the day after the agreed payment date, and continues to accrue until the debt is paid in full.</p>
+    <p>You can charge interest at 8% above the Bank of England base rate. With the current base rate at 3.75%, the total statutory interest rate is 11.75% per annum. Interest accrues daily from the day after the agreed payment date, and continues to accrue until the debt is paid in full.</p>
 
     <p>In addition to interest, you're entitled to a fixed sum as compensation for the cost of recovering the debt. The amount depends on the size of the outstanding invoice: &pound;40 for debts up to &pound;999.99, &pound;70 for debts between &pound;1,000 and &pound;9,999.99, and &pound;100 for debts of &pound;10,000 or more.</p>
 
@@ -400,7 +400,7 @@ h2 {
     <li><a href="/privacy">Privacy</a></li>
     <li><a href="/terms">Terms</a></li>
   </ul>
-  <div class="footer-copy">&copy; 2025 Owed &middot; Built in the UK &#x1F1EC;&#x1F1E7;</div>
+  <div class="footer-copy">&copy; 2026 Owed &middot; Built in the UK &#x1F1EC;&#x1F1E7;</div>
 </footer>
 
 <script>
@@ -412,9 +412,9 @@ h2 {
   var dd = String(today.getDate()).padStart(2, '0');
   document.getElementById('calc-date').value = yyyy + '-' + mm + '-' + dd;
 
-  var BASE_RATE = 4.5;
+  var BASE_RATE = 3.75;
   var STATUTORY_RATE = 8;
-  var ANNUAL_RATE = (BASE_RATE + STATUTORY_RATE) / 100; // 0.125
+  var ANNUAL_RATE = (BASE_RATE + STATUTORY_RATE) / 100; // 0.1175
   var DAILY_RATE = ANNUAL_RATE / 365;
 
   document.getElementById('calculate-btn').addEventListener('click', function() {
