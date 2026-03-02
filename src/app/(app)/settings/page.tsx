@@ -48,6 +48,8 @@ export default async function SettingsPage() {
         <SettingsForm
           businessName={profile?.business_name || ''}
           email={profile?.email || user.email || ''}
+          statutoryInterestEnabled={profile?.statutory_interest_enabled || false}
+          paymentLink={profile?.payment_link || ''}
         />
       </div>
 

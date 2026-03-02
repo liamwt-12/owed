@@ -8,8 +8,18 @@ create table public.profiles (
   id uuid references auth.users primary key,
   email text not null,
   business_name text,
+  welcome_seen boolean default false,
+  statutory_interest_enabled boolean default false,
+  payment_link text,
+  total_recovered numeric(14,2) default 0,
   created_at timestamptz default now()
 );
+
+-- Migration (run on existing databases):
+-- ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS welcome_seen boolean DEFAULT false;
+-- ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS statutory_interest_enabled boolean DEFAULT false;
+-- ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS payment_link text;
+-- ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS total_recovered numeric(14,2) DEFAULT 0;
 
 alter table public.profiles enable row level security;
 

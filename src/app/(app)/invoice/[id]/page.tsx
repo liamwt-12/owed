@@ -5,6 +5,7 @@ import { PauseResumeButton } from './PauseResumeButton'
 import { MarkPaidButton } from './MarkPaidButton'
 import { TheyRepliedButton } from './TheyRepliedButton'
 import { CallButton } from './CallButton'
+import { CallScript } from './CallScript'
 
 export default async function InvoiceDetailPage({
   params,
@@ -23,6 +24,12 @@ export default async function InvoiceDetailPage({
     .single()
 
   if (!invoice) notFound()
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('business_name')
+    .eq('id', user.id)
+    .single()
 
   const { data: chaseEmails } = await supabase
     .from('chase_emails')
@@ -77,7 +84,16 @@ export default async function InvoiceDetailPage({
           <p className="text-[15px] font-medium text-ink mb-1">Sequence complete.</p>
           <p className="text-sm text-muted">This invoice has completed our 4-stage sequence. Might be time to pick up the phone.</p>
           {invoice.contact_phone && (
-            <CallButton invoiceId={invoice.id} phone={invoice.contact_phone} contactName={invoice.contact_name} />
+            <>
+              <CallButton invoiceId={invoice.id} phone={invoice.contact_phone} contactName={invoice.contact_name} />
+              <CallScript
+                invoiceId={invoice.id}
+                phone={invoice.contact_phone}
+                contactName={invoice.contact_name}
+                invoiceNumber={invoice.invoice_number || 'your invoice'}
+                businessName={profile?.business_name || 'me'}
+              />
+            </>
           )}
         </div>
       )}

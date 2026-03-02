@@ -12,51 +12,75 @@ function escapeHtml(str: string): string {
     .replace(/'/g, '&#39;')
 }
 
-function getEmailContent(stage: number, invoice: any, businessName: string, unsubscribeUrl: string) {
-  const contact = escapeHtml(invoice.contact_name?.split(' ')[0] || 'there')
+function getEmailContent(
+  stage: number,
+  invoice: any,
+  businessName: string,
+  unsubscribeUrl: string,
+  options: { statutoryInterest?: boolean; paymentLink?: string },
+) {
+  const firstName = escapeHtml(invoice.contact_name?.split(' ')[0] || 'there')
   const amount = escapeHtml(`£${Number(invoice.amount_due).toLocaleString('en-GB', { minimumFractionDigits: 2 })}`)
   const number = escapeHtml(invoice.invoice_number || 'your invoice')
   const dueDate = escapeHtml(new Date(invoice.due_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }))
-  const safeBusiness = escapeHtml(businessName)
-  const footer = `<p style="color:#999;font-size:12px;margin-top:32px;border-top:1px solid #eee;padding-top:16px">Sent on behalf of ${safeBusiness} · Powered by Owed · <a href="${unsubscribeUrl}" style="color:#999">Unsubscribe</a></p>`
+  const sender = escapeHtml(businessName)
+
+  const footer = `<p style="color:#999;font-size:12px;margin-top:32px;border-top:1px solid #eee;padding-top:16px">Sent by ${sender} · <a href="${unsubscribeUrl}" style="color:#999">Unsubscribe</a></p>`
+
+  // Pay now button
+  const payButton = options.paymentLink
+    ? `<p style="margin-top:20px"><a href="${escapeHtml(options.paymentLink)}" style="display:inline-block;background:#E8420E;color:white;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600;font-size:15px">Pay this invoice</a></p>`
+    : ''
+
+  // Statutory interest paragraph (stages 3-4 only)
+  let interestParagraph = ''
+  if (options.statutoryInterest && (stage === 3 || stage === 4)) {
+    const amountNum = Number(invoice.amount_due)
+    const daysOverdue = Math.max(0, Math.floor((Date.now() - new Date(invoice.due_date).getTime()) / (1000 * 60 * 60 * 24)))
+    const interest = amountNum * 0.1175 / 365 * daysOverdue
+    const compensation = amountNum >= 10000 ? 100 : amountNum >= 1000 ? 70 : 40
+    const interestFormatted = `\u00a3${interest.toFixed(2)}`
+    const compFormatted = `\u00a3${compensation.toFixed(2)}`
+    interestParagraph = `<p style="margin-top:16px;padding:16px;background:#f9f9f6;border-left:3px solid #ddd;font-size:13px;color:#555">Under the Late Payment of Commercial Debts Act 1998, statutory interest of ${interestFormatted} has accrued on this invoice (8% + Bank of England base rate of 3.75%, calculated daily from the due date). Compensation of ${compFormatted} is also applicable.</p>`
+  }
 
   switch (stage) {
     case 1:
       return {
-        subject: `Invoice ${number} — Quick reminder`,
-        html: `<p>Hi ${contact},</p>
-<p>Just a quick note that invoice ${number} for ${amount} was due on ${dueDate}.</p>
-<p>If you've already sent payment, please ignore this — and thank you.</p>
-<p>If not, do let us know if you have any questions.</p>
-<p>Many thanks,<br>${safeBusiness}</p>
+        subject: `Invoice ${number} \u2014 Quick reminder`,
+        html: `<p>Hi ${firstName},</p>
+<p>Just a quick note that invoice ${number} for ${amount} was due on ${dueDate}. If you've already sent payment, please ignore this.</p>
+<p>If not, I'd appreciate it if you could arrange payment at your earliest convenience.</p>
+${payButton}
+<p>Thanks,<br>${sender}</p>
 ${footer}`,
       }
     case 2:
       return {
-        subject: `Invoice ${number} — Payment outstanding`,
-        html: `<p>Hi ${contact},</p>
-<p>Following up on invoice ${number} for ${amount}, which remains outstanding.</p>
-<p>Could you let me know when we can expect payment, or if there's anything we can help resolve on our end?</p>
-<p>Thanks,<br>${safeBusiness}</p>
+        subject: `Invoice ${number} \u2014 Payment outstanding`,
+        html: `<p>Hi ${firstName},</p>
+<p>Following up on invoice ${number} for ${amount}, which is now a week overdue. Could you let me know when I can expect payment? Happy to discuss if there's an issue.</p>
+${payButton}
+<p>${sender}</p>
 ${footer}`,
       }
     case 3:
       return {
-        subject: `Invoice ${number} — Action required`,
-        html: `<p>Hi ${contact},</p>
-<p>Invoice ${number} for ${amount} is now significantly overdue. We'd appreciate confirmation of payment within 5 working days.</p>
-<p>If there's an issue with this invoice, please reply and we'll be happy to discuss.</p>
-<p>Regards,<br>${safeBusiness}</p>
+        subject: `Invoice ${number} \u2014 Action required`,
+        html: `<p>Invoice ${number} for ${amount} is now 14 days overdue. I'd appreciate confirmation of payment within 5 working days.</p>
+${interestParagraph}
+${payButton}
+<p>${sender}</p>
 ${footer}`,
       }
     case 4:
       return {
-        subject: `Invoice ${number} — Final notice`,
-        html: `<p>Hi ${contact},</p>
-<p>This is a final reminder regarding invoice ${number} for ${amount}.</p>
-<p>If payment is not received shortly, we may need to consider further action in line with our terms.</p>
-<p>We'd strongly prefer to resolve this directly — please reply or arrange payment at your earliest convenience.</p>
-<p>${safeBusiness}</p>
+        subject: `Invoice ${number} \u2014 Final notice`,
+        html: `<p>This is my final reminder regarding invoice ${number} for ${amount}, now 21 days overdue. If I don't hear back within 7 days, I may need to consider next steps, which I'd really rather avoid.</p>
+<p>Please get in touch.</p>
+${interestParagraph}
+${payButton}
+<p>${sender}</p>
 ${footer}`,
       }
     default:
@@ -95,7 +119,7 @@ export async function GET(request: Request) {
 
   const { data: invoices } = await supabaseAdmin
     .from('invoices')
-    .select('*, profiles!inner(email, business_name)')
+    .select('*, profiles!inner(email, business_name, statutory_interest_enabled, payment_link)')
     .eq('status', 'open')
     .eq('chasing_enabled', true)
     .not('contact_email', 'is', null)
@@ -157,7 +181,16 @@ export async function GET(request: Request) {
       const unsubscribeToken = Buffer.from(invoice.id).toString('base64url')
       const unsubscribeUrl = `https://www.owedhq.com/unsubscribe?token=${unsubscribeToken}`
 
-      const { subject, html } = getEmailContent(nextStage, invoice, businessName, unsubscribeUrl)
+      const { subject, html } = getEmailContent(nextStage, invoice, businessName, unsubscribeUrl, {
+        statutoryInterest: profile?.statutory_interest_enabled || false,
+        paymentLink: profile?.payment_link || undefined,
+      })
+
+      // Use business name as sender display name
+      const fromEmail = process.env.RESEND_FROM_EMAIL || 'accounts@owedhq.com'
+      const fromAddress = businessName !== 'Our records'
+        ? `${businessName} <${fromEmail}>`
+        : fromEmail
 
       const resendRes = await fetch('https://api.resend.com/emails', {
         method: 'POST',
@@ -166,7 +199,7 @@ export async function GET(request: Request) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          from: process.env.RESEND_FROM_EMAIL || 'accounts@owedhq.com',
+          from: fromAddress,
           to: invoice.contact_email,
           reply_to: replyTo,
           subject,

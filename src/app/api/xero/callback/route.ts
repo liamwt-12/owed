@@ -104,5 +104,16 @@ export async function GET(request: Request) {
     console.error('Initial sync failed:', e)
   }
 
+  // First-time users see the welcome reveal; returning users go to found page
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('welcome_seen')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile?.welcome_seen) {
+    return NextResponse.redirect(`${origin}/welcome`)
+  }
+
   return NextResponse.redirect(`${origin}/onboarding/found`)
 }

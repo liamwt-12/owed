@@ -276,6 +276,47 @@ export async function POST(request: Request) {
                 if (userEmail) {
                   const paidAmount = `\u00a3${Number(tracked.amount_due).toLocaleString('en-GB', { minimumFractionDigits: 2 })}`
                   const invNumber = tracked.invoice_number || 'an invoice'
+
+                  // Get chase stats for this invoice
+                  const { data: chaseStats } = await supabaseAdmin
+                    .from('chase_emails')
+                    .select('sent_at')
+                    .eq('invoice_id', tracked.id)
+                    .eq('status', 'sent')
+                    .order('sent_at', { ascending: true })
+
+                  const chaseCount = chaseStats?.length || 0
+                  const firstChase = chaseStats?.[0]?.sent_at
+                  const chaseDays = firstChase
+                    ? Math.max(1, Math.floor((Date.now() - new Date(firstChase).getTime()) / (1000 * 60 * 60 * 24)))
+                    : 0
+
+                  // Increment user's total_recovered and get new value
+                  await supabaseAdmin
+                    .from('profiles')
+                    .update({
+                      total_recovered: supabaseAdmin.rpc ? undefined : 0, // handled below
+                    })
+                    .eq('id', tracked.user_id)
+
+                  // Use raw SQL increment via rpc or manual calculation
+                  const { data: currentProfile } = await supabaseAdmin
+                    .from('profiles')
+                    .select('total_recovered')
+                    .eq('id', tracked.user_id)
+                    .single()
+
+                  const newTotal = (Number(currentProfile?.total_recovered) || 0) + Number(tracked.amount_due)
+                  await supabaseAdmin
+                    .from('profiles')
+                    .update({ total_recovered: newTotal })
+                    .eq('id', tracked.user_id)
+
+                  const totalFormatted = `\u00a3${newTotal.toLocaleString('en-GB', { minimumFractionDigits: 2 })}`
+                  const chaseInfo = chaseCount > 0
+                    ? ` It took ${chaseDays} day${chaseDays !== 1 ? 's' : ''} and ${chaseCount} chase email${chaseCount !== 1 ? 's' : ''}.`
+                    : ''
+
                   await fetch('https://api.resend.com/emails', {
                     method: 'POST',
                     headers: {
@@ -285,11 +326,10 @@ export async function POST(request: Request) {
                     body: JSON.stringify({
                       from: process.env.RESEND_FROM_EMAIL || 'accounts@owedhq.com',
                       to: userEmail,
-                      subject: `Invoice ${invNumber} has been paid`,
-                      html: `<p>Good news — Invoice #${invNumber} for ${paidAmount} to ${tracked.contact_name || 'your client'} has been paid.</p>
-<p>We detected the payment via Xero and have stopped all chase emails for this invoice.</p>
-<p style="margin-top:24px">— Owed</p>
-<p style="color:#999;font-size:12px;margin-top:32px;border-top:1px solid #eee;padding-top:16px">Payment notification from Owed · <a href="https://owedhq.com/dashboard" style="color:#999">View dashboard</a></p>`,
+                      subject: `${paidAmount} just landed \u2014 ${invNumber} is paid`,
+                      html: `<p>${tracked.contact_name || 'Your client'} paid ${invNumber} for ${paidAmount}.${chaseInfo} Nice one.</p>
+<p>That\u2019s ${totalFormatted} recovered with Owed so far.</p>
+<p style="color:#999;font-size:12px;margin-top:32px;border-top:1px solid #eee;padding-top:16px"><a href="https://owedhq.com/dashboard" style="color:#999">View dashboard</a></p>`,
                     }),
                   })
                 }
