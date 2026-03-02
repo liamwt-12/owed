@@ -32,6 +32,15 @@ export default async function DashboardPage() {
 
   if (error) console.error('Dashboard query error:', error)
 
+  // Get recovery stats
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('total_recovered')
+    .eq('id', user!.id)
+    .single()
+
+  const totalRecovered = Number(profile?.total_recovered) || 0
+
   // Get recent open tracking events (last 7 days)
   const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
   const { data: recentOpens } = await supabase
@@ -85,6 +94,14 @@ export default async function DashboardPage() {
 
   return (
     <div>
+      {/* Recovery stat */}
+      {totalRecovered > 0 && (
+        <div className="mb-4 flex items-center gap-2 px-4 py-3 bg-green-pale border border-green/15 rounded-xl">
+          <span className="w-1.5 h-1.5 bg-pop rounded-full flex-shrink-0" />
+          <p className="text-sm text-green font-medium">You&apos;ve recovered £{totalRecovered.toLocaleString('en-GB', { minimumFractionDigits: 2 })} with Owed so far.</p>
+        </div>
+      )}
+
       {/* Activity notifications */}
       {(uniqueOpens.length > 0 || (recentPaid && recentPaid.length > 0)) && (
         <div className="mb-6 flex flex-col gap-2">

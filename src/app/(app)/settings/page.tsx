@@ -101,7 +101,7 @@ export default async function SettingsPage() {
               {profile?.business_name || 'Your Business'}
             </p>
             <p className="text-[10px] text-faint mt-4 pt-3 border-t border-line">
-              Sent on behalf of {profile?.business_name || 'Your Business'} · Powered by Owed
+              Sent by {profile?.business_name || 'Your Business'}
             </p>
           </div>
         </div>

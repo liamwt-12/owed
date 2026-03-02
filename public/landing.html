@@ -675,6 +675,96 @@ nav {
   font-weight: 500;
 }
 
+/* ─── PROMISE ─── */
+.promise-card {
+  max-width: 600px;
+  margin: 0 auto 48px;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 28px 32px;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.promise-icon {
+  width: 40px;
+  height: 40px;
+  background: var(--green-pale);
+  border: 1px solid rgba(26,102,68,0.15);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.promise-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 16px;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+
+.promise-text {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+/* ─── TESTIMONIAL ─── */
+.testimonial-wrap {
+  padding: 80px 40px;
+  max-width: 680px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.testimonial-card {
+  background: var(--cream);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 36px 32px 28px;
+}
+
+.testimonial-quote {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 20px;
+  line-height: 1.55;
+  color: var(--ink);
+  margin-bottom: 20px;
+}
+
+.testimonial-author {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.testimonial-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--pop);
+  border-radius: 50%;
+}
+
+.testimonial-name {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.testimonial-role {
+  font-size: 13px;
+  color: var(--faint);
+  margin-top: 4px;
+}
+
 /* ─── PRICING ─── */
 .pricing-wrap { max-width: 480px; margin: 0 auto; }
 
@@ -1249,6 +1339,16 @@ footer {
   <div class="section-label">Pricing</div>
   <h2 class="section-title" style="margin-bottom: 48px;">One plan. No surprises.</h2>
 
+  <div class="promise-card">
+    <div class="promise-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1A6644" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    </div>
+    <div>
+      <div class="promise-title">Our promise</div>
+      <div class="promise-text">If you don&rsquo;t recover at least 5x your subscription cost in your first 90 days, the next 3 months are on us. No questions asked.</div>
+    </div>
+  </div>
+
   <div class="pricing-wrap">
     <div class="pricing-card">
       <div class="pricing-label">Owed</div>
@@ -1280,6 +1380,10 @@ footer {
           <div class="pricing-feature-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
           Statutory interest calculator
         </li>
+        <li class="pricing-feature">
+          <div class="pricing-feature-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+          5x Recovery Promise
+        </li>
       </ul>
 
       <button class="btn-pricing" onclick="window.location='/signup'">Start free trial &mdash; 14 days</button>
@@ -1287,6 +1391,18 @@ footer {
     </div>
   </div>
 </section>
+
+<!-- TESTIMONIAL -->
+<div class="testimonial-wrap">
+  <div class="testimonial-card">
+    <div class="testimonial-quote">&ldquo;Connected on Tuesday. Got paid &pound;2,400 by Thursday. I genuinely do not know why I waited so long.&rdquo;</div>
+    <div class="testimonial-author">
+      <div class="testimonial-dot"></div>
+      <span class="testimonial-name">Sarah M.</span>
+    </div>
+    <div class="testimonial-role">Freelance Designer, London</div>
+  </div>
+</div>
 
 <!-- FINAL CTA -->
 <div class="final-cta">
@@ -1307,6 +1423,7 @@ footer {
     <li><a href="/for-accountants.html">For accountants</a></li>
     <li><a href="/email-templates.html">Email templates</a></li>
     <li><a href="/late-payment/electrician.html">Late payment help</a></li>
+    <li><a href="/compare/owed-vs-chaser.html">Owed vs Chaser</a></li>
     <li><a href="/privacy">Privacy</a></li>
     <li><a href="/terms">Terms</a></li>
     <li><a href="/support">Support</a></li>
