@@ -35,11 +35,13 @@ export default async function DashboardPage() {
   // Get recovery stats
   const { data: profile } = await supabase
     .from('profiles')
-    .select('total_recovered')
+    .select('total_recovered, tracking_start_date, promise_checked, promise_credit_applied')
     .eq('id', user!.id)
     .single()
 
   const totalRecovered = Number(profile?.total_recovered) || 0
+  const trackingStartDate = profile?.tracking_start_date
+  const promiseCreditApplied = profile?.promise_credit_applied
 
   // Get recent open tracking events (last 7 days)
   const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
@@ -94,11 +96,31 @@ export default async function DashboardPage() {
 
   return (
     <div>
-      {/* Recovery stat */}
-      {totalRecovered > 0 && (
-        <div className="mb-4 flex items-center gap-2 px-4 py-3 bg-green-pale border border-green/15 rounded-xl">
-          <span className="w-1.5 h-1.5 bg-pop rounded-full flex-shrink-0" />
-          <p className="text-sm text-green font-medium">You&apos;ve recovered £{totalRecovered.toLocaleString('en-GB', { minimumFractionDigits: 2 })} with Owed so far.</p>
+      {/* Recovery stat + 5x Promise progress */}
+      {trackingStartDate && (
+        <div className="mb-4 px-4 py-3 bg-green-pale border border-green/15 rounded-xl">
+          <div className="flex items-center gap-2">
+            <span className="w-1.5 h-1.5 bg-pop rounded-full flex-shrink-0" />
+            <p className="text-sm text-green font-medium">You&apos;ve recovered £{totalRecovered.toLocaleString('en-GB', { minimumFractionDigits: 2 })} with Owed so far.</p>
+          </div>
+          <div className="mt-2">
+            <div className="flex items-center justify-between text-xs text-muted mb-1">
+              <span>5x Recovery Promise</span>
+              <span>£{Math.min(totalRecovered, 435).toLocaleString('en-GB', { minimumFractionDigits: 0 })} / £435</span>
+            </div>
+            <div className="w-full h-1.5 bg-green/10 rounded-full overflow-hidden">
+              <div className="h-full bg-green rounded-full transition-all" style={{ width: `${Math.min(100, (totalRecovered / 435) * 100)}%` }} />
+            </div>
+            {totalRecovered >= 435 && (
+              <p className="mt-1.5 text-xs text-green font-medium flex items-center gap-1">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                5x Recovery Promise achieved
+              </p>
+            )}
+            {promiseCreditApplied && (
+              <p className="mt-1.5 text-xs text-green font-medium">We credited your account with £87 — promise kept.</p>
+            )}
+          </div>
         </div>
       )}
 

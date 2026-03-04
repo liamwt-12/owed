@@ -53,6 +53,15 @@ export async function POST(request: Request) {
           onConflict: 'user_id',
         })
 
+        // Set tracking_start_date for Recovery Promise (only on creation, only once)
+        if (event.type === 'customer.subscription.created') {
+          await supabaseAdmin
+            .from('profiles')
+            .update({ tracking_start_date: new Date().toISOString() })
+            .eq('id', userId)
+            .is('tracking_start_date', null)
+        }
+
         break
       }
 
