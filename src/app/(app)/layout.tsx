@@ -27,13 +27,31 @@ export default async function AppLayout({
     .eq('user_id', user.id)
     .single()
 
-  // Paywall: redirect if no subscription, expired trial, or cancelled
+  // Allow access if: active subscription, valid trial, OR new user with no subscription yet (grace period)
   const isActive = subscription?.status === 'active'
   const isTrialing = subscription?.status === 'trialing' &&
     subscription?.trial_ends_at &&
     new Date(subscription.trial_ends_at) > new Date()
 
-  if (!isActive && !isTrialing) {
+  // Grace period: if no subscription exists, check profile creation date
+  // Allow 14 days from signup before requiring payment
+  let isInGracePeriod = false
+  if (!subscription) {
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('created_at')
+      .eq('id', user.id)
+      .single()
+
+    if (profileData?.created_at) {
+      const daysSinceSignup = Math.floor(
+        (Date.now() - new Date(profileData.created_at).getTime()) / (1000 * 60 * 60 * 24)
+      )
+      isInGracePeriod = daysSinceSignup <= 14
+    }
+  }
+
+  if (!isActive && !isTrialing && !isInGracePeriod) {
     redirect('/upgrade')
   }
 

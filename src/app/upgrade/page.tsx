@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import { UpgradeButton } from './UpgradeButton'
 
 export default async function UpgradePage() {
   const supabase = createClient()
@@ -10,7 +11,6 @@ export default async function UpgradePage() {
     redirect('/login')
   }
 
-  // If user already has active sub, send them to dashboard
   const { data: subscription } = await supabase
     .from('subscriptions')
     .select('status, trial_ends_at')
@@ -36,12 +36,7 @@ export default async function UpgradePage() {
         <p className="text-muted text-sm mb-8 leading-relaxed">
           Upgrade to keep chasing your overdue invoices automatically. Your data is safe — pick up right where you left off.
         </p>
-        <a
-          href="/api/stripe/checkout"
-          className="inline-block w-full py-3 px-6 bg-ink text-white text-sm font-semibold rounded-lg hover:bg-ink/90 transition-colors mb-3"
-        >
-          Upgrade now — £14/month
-        </a>
+        <UpgradeButton />
         <Link
           href="/settings"
           className="text-xs text-faint hover:text-muted transition-colors"
