@@ -218,3 +218,12 @@ returns void as $$
       updated_at = now()
   where id = 1;
 $$ language sql;
+
+
+-- 9. Atomically increment a user's total_recovered
+create or replace function increment_user_recovered(p_user_id uuid, p_amount numeric)
+returns void as $$
+  update profiles
+  set total_recovered = total_recovered + p_amount
+  where id = p_user_id;
+$$ language sql;

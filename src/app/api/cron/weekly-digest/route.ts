@@ -7,9 +7,22 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  // Only send digest to users with active/trialing subscriptions
+  const { data: activeSubs } = await supabaseAdmin
+    .from('subscriptions')
+    .select('user_id')
+    .or('status.eq.active,status.eq.trialing')
+
+  const activeUserIds = (activeSubs || []).map((s: any) => s.user_id)
+
+  if (activeUserIds.length === 0) {
+    return NextResponse.json({ sent: 0, message: 'No active subscribers' })
+  }
+
   const { data: profiles } = await supabaseAdmin
     .from('profiles')
     .select('id, email, business_name')
+    .in('id', activeUserIds)
 
   if (!profiles || profiles.length === 0) {
     return NextResponse.json({ sent: 0, message: 'No users' })

@@ -23,7 +23,7 @@ export default function TermsPage() {
 
           <div>
             <h2 className="text-ink font-semibold text-base mb-2">Pricing and payment</h2>
-            <p>Owed costs £19 per month, billed monthly via Stripe. You can cancel at any time. Cancellation takes effect at the end of your current billing period. We do not offer refunds for partial months.</p>
+            <p>Owed costs £29 per month, billed monthly via Stripe. You can cancel at any time. Cancellation takes effect at the end of your current billing period. We do not offer refunds for partial months.</p>
           </div>
 
           <div>

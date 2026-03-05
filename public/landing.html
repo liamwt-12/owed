@@ -714,93 +714,12 @@ nav {
   line-height: 1.6;
 }
 
-/* ─── TESTIMONIAL CAROUSEL ─── */
+/* ─── SOCIAL PROOF ─── */
 .testimonial-wrap {
   padding: 80px 40px;
   max-width: 680px;
   margin: 0 auto;
   text-align: center;
-}
-
-.testimonial-carousel {
-  position: relative;
-}
-
-.testimonial-card {
-  background: var(--cream);
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  padding: 36px 32px 28px;
-}
-
-.testimonial-slide {
-  display: none;
-  opacity: 0;
-  transition: opacity 0.5s ease;
-}
-
-.testimonial-slide.active {
-  display: block;
-  opacity: 1;
-}
-
-.testimonial-quote {
-  font-family: 'Instrument Serif', serif;
-  font-style: italic;
-  font-size: 20px;
-  line-height: 1.55;
-  color: var(--ink);
-  margin-bottom: 20px;
-}
-
-.testimonial-author {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-.testimonial-dot {
-  width: 6px;
-  height: 6px;
-  background: var(--pop);
-  border-radius: 50%;
-}
-
-.testimonial-name {
-  font-family: 'Syne', sans-serif;
-  font-weight: 700;
-  font-size: 14px;
-  color: var(--ink);
-}
-
-.testimonial-role {
-  font-size: 13px;
-  color: var(--faint);
-  margin-top: 4px;
-}
-
-.testimonial-dots {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  margin-top: 20px;
-}
-
-.testimonial-dots button {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  border: none;
-  background: var(--line);
-  cursor: pointer;
-  padding: 0;
-  transition: background 0.3s, transform 0.3s;
-}
-
-.testimonial-dots button.active {
-  background: var(--ink);
-  transform: scale(1.25);
 }
 
 /* ─── PRICING ─── */
@@ -1030,6 +949,7 @@ footer {
   .section { padding: 60px 20px; }
   .counter-strip { padding: 16px 20px; flex-wrap: wrap; justify-content: center; }
   .testimonial-wrap { padding: 60px 20px; }
+
   .promise-card { padding: 20px; max-width: 100%; }
   footer { flex-direction: column; gap: 16px; text-align: center; padding: 24px 20px; }
   .footer-links { flex-wrap: wrap; justify-content: center; }
@@ -1043,7 +963,6 @@ footer {
   .callout-block { padding: 20px !important; max-width: 100% !important; }
   .crisis-section { padding-left: 20px !important; padding-right: 20px !important; }
   .final-cta { padding: 60px 20px !important; }
-  .testimonial-quote { font-size: 18px; }
 }
 </style>
 <script type="application/ld+json">
@@ -1438,54 +1357,24 @@ footer {
   </div>
 </section>
 
-<!-- TESTIMONIAL CAROUSEL -->
+<!-- SOCIAL PROOF -->
 <div class="testimonial-wrap">
-  <div class="testimonial-carousel" id="testimonial-carousel">
-    <div class="testimonial-slide active">
-      <div class="testimonial-card">
-        <div class="testimonial-quote">&ldquo;Connected on Tuesday. Got paid &pound;2,400 by Thursday. I genuinely do not know why I waited so long.&rdquo;</div>
-        <div class="testimonial-author">
-          <div class="testimonial-dot"></div>
-          <span class="testimonial-name">Sarah M.</span>
-        </div>
-        <div class="testimonial-role">Freelance Designer, London</div>
+  <div style="max-width: 620px; margin: 0 auto; text-align: center;">
+    <p style="font-family: 'Instrument Serif', serif; font-style: italic; font-size: 26px; line-height: 1.5; color: var(--ink); margin-bottom: 20px;">&ldquo;UK small businesses are currently owed over &pound;21,000 each in unpaid invoices, on average.&rdquo;</p>
+    <p style="font-size: 13px; color: var(--faint); margin-bottom: 24px;">Source: QuickBooks Small Business Late Payments Report, 2025</p>
+    <div style="display: flex; gap: 32px; justify-content: center; flex-wrap: wrap; margin-top: 24px;">
+      <div style="text-align: center;">
+        <p style="font-family: 'Syne', sans-serif; font-weight: 800; font-size: 32px; color: var(--ink);">62%</p>
+        <p style="font-size: 13px; color: var(--muted); max-width: 140px;">of UK small business invoices are paid late</p>
       </div>
-    </div>
-    <div class="testimonial-slide">
-      <div class="testimonial-card">
-        <div class="testimonial-quote">&ldquo;Three invoices, &pound;8,200 total, all paid within two weeks. The emails sound exactly like me.&rdquo;</div>
-        <div class="testimonial-author">
-          <div class="testimonial-dot"></div>
-          <span class="testimonial-name">James R.</span>
-        </div>
-        <div class="testimonial-role">IT Consultant, Manchester</div>
+      <div style="text-align: center;">
+        <p style="font-family: 'Syne', sans-serif; font-weight: 800; font-size: 32px; color: var(--ink);">45%</p>
+        <p style="font-size: 13px; color: var(--muted); max-width: 140px;">are seeing more late payments than last year</p>
       </div>
-    </div>
-    <div class="testimonial-slide">
-      <div class="testimonial-card">
-        <div class="testimonial-quote">&ldquo;I used to dread chasing invoices. Now I do not even think about it. Owed just handles it.&rdquo;</div>
-        <div class="testimonial-author">
-          <div class="testimonial-dot"></div>
-          <span class="testimonial-name">Priya K.</span>
-        </div>
-        <div class="testimonial-role">Marketing Agency, Bristol</div>
+      <div style="text-align: center;">
+        <p style="font-family: 'Syne', sans-serif; font-weight: 800; font-size: 32px; color: var(--ink);">52%</p>
+        <p style="font-size: 13px; color: var(--muted); max-width: 140px;">forfeit payments rather than chase them</p>
       </div>
-    </div>
-    <div class="testimonial-slide">
-      <div class="testimonial-card">
-        <div class="testimonial-quote">&ldquo;Saved me at least five hours a week. Pays for itself ten times over.&rdquo;</div>
-        <div class="testimonial-author">
-          <div class="testimonial-dot"></div>
-          <span class="testimonial-name">Tom H.</span>
-        </div>
-        <div class="testimonial-role">Electrician, Leeds</div>
-      </div>
-    </div>
-    <div class="testimonial-dots">
-      <button class="active" aria-label="Testimonial 1"></button>
-      <button aria-label="Testimonial 2"></button>
-      <button aria-label="Testimonial 3"></button>
-      <button aria-label="Testimonial 4"></button>
     </div>
   </div>
 </div>
@@ -1550,39 +1439,6 @@ const observer = new IntersectionObserver((entries) => {
 
 observer.observe(document.getElementById('counter'));
 
-// Testimonial carousel
-(function() {
-  const slides = document.querySelectorAll('.testimonial-slide');
-  const dots = document.querySelectorAll('.testimonial-dots button');
-  let current = 0;
-  let timer;
-
-  function show(index) {
-    slides[current].classList.remove('active');
-    dots[current].classList.remove('active');
-    current = index;
-    slides[current].classList.add('active');
-    dots[current].classList.add('active');
-  }
-
-  function next() {
-    show((current + 1) % slides.length);
-  }
-
-  function startTimer() {
-    timer = setInterval(next, 5000);
-  }
-
-  dots.forEach(function(dot, i) {
-    dot.addEventListener('click', function() {
-      clearInterval(timer);
-      show(i);
-      startTimer();
-    });
-  });
-
-  startTimer();
-})();
 </script>
 
 </body>

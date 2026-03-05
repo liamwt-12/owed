@@ -4,7 +4,7 @@ import { cookies } from 'next/headers'
 export async function GET() {
   const clientId = process.env.XERO_CLIENT_ID
   const redirectUri = process.env.XERO_REDIRECT_URI
-  const scopes = 'openid profile email accounting.transactions.read offline_access'
+  const scopes = 'openid profile email accounting.transactions.read accounting.contacts.read offline_access'
 
   const state = crypto.randomUUID()
 

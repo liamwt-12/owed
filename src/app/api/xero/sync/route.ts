@@ -295,18 +295,20 @@ export async function POST(request: Request) {
                     ? Math.max(1, Math.floor((Date.now() - new Date(firstChase).getTime()) / (1000 * 60 * 60 * 24)))
                     : 0
 
-                  // Increment user's total_recovered: read current value then update
+                  // Atomically increment user's total_recovered
+                  await supabaseAdmin.rpc('increment_user_recovered', {
+                    p_user_id: tracked.user_id,
+                    p_amount: Number(tracked.amount_due),
+                  })
+
+                  // Fetch updated total for the notification email
                   const { data: currentProfile } = await supabaseAdmin
                     .from('profiles')
                     .select('total_recovered')
                     .eq('id', tracked.user_id)
                     .single()
 
-                  const newTotal = (Number(currentProfile?.total_recovered) || 0) + Number(tracked.amount_due)
-                  await supabaseAdmin
-                    .from('profiles')
-                    .update({ total_recovered: newTotal })
-                    .eq('id', tracked.user_id)
+                  const newTotal = Number(currentProfile?.total_recovered) || 0
 
                   const totalFormatted = `\u00a3${newTotal.toLocaleString('en-GB', { minimumFractionDigits: 2 })}`
                   const chaseInfo = chaseCount > 0
