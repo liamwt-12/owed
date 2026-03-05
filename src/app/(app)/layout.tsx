@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { LogoutButton } from './LogoutButton'
+import { BetaActivator } from './BetaActivator'
 
 export default async function AppLayout({
   children,
@@ -110,6 +111,7 @@ export default async function AppLayout({
       </nav>
 
       <main className="md:ml-[240px] pt-14 pb-20 px-4 md:pt-0 md:pb-0 md:px-8 md:py-8">
+        <BetaActivator userId={user.id} />
         {needsReconnect && (
           <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-center justify-between">
             <p className="text-sm text-amber-800">Your Xero connection has expired. Reconnect to keep syncing invoices.</p>
