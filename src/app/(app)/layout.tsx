@@ -17,7 +17,7 @@ export default async function AppLayout({
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('business_name, email')
+    .select('business_name, email, beta_user')
     .eq('id', user.id)
     .single()
 
@@ -51,7 +51,9 @@ export default async function AppLayout({
     }
   }
 
-  if (!isActive && !isTrialing && !isInGracePeriod) {
+  const isBetaUser = profile?.beta_user === true
+
+  if (!isActive && !isTrialing && !isInGracePeriod && !isBetaUser) {
     redirect('/upgrade')
   }
 

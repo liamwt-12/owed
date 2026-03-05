@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 
@@ -12,16 +12,30 @@ export default function SignupPage() {
   const [success, setSuccess] = useState(false)
   const supabase = createClient()
 
+  // Store beta param in localStorage so we can pass it through the auth callback
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const beta = params.get('beta')
+    if (beta) {
+      localStorage.setItem('owed_beta', beta)
+    }
+  }, [])
+
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
 
+    const betaCode = localStorage.getItem('owed_beta')
+    const redirectUrl = betaCode
+      ? `${window.location.origin}/api/auth/callback?beta=${encodeURIComponent(betaCode)}`
+      : `${window.location.origin}/api/auth/callback`
+
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/api/auth/callback`,
+        emailRedirectTo: redirectUrl,
       },
     })
 

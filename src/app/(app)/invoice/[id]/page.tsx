@@ -6,6 +6,7 @@ import { MarkPaidButton } from './MarkPaidButton'
 import { TheyRepliedButton } from './TheyRepliedButton'
 import { CallButton } from './CallButton'
 import { CallScript } from './CallScript'
+import { AddEmailForm } from './AddEmailForm'
 
 export default async function InvoiceDetailPage({
   params,
@@ -155,10 +156,7 @@ export default async function InvoiceDetailPage({
 
       {/* Missing email */}
       {!invoice.contact_email && invoice.status === 'open' && (
-        <div className="bg-pop-pale border border-pop/20 rounded-xl p-4 mb-4">
-          <p className="text-sm font-medium text-ink mb-1">We couldn&apos;t find an email for this client.</p>
-          <p className="text-xs text-muted">Add their email address in Xero and we&apos;ll pick it up on the next sync.</p>
-        </div>
+        <AddEmailForm invoiceId={invoice.id} />
       )}
 
       {/* Late Payment Act */}

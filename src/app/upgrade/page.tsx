@@ -22,7 +22,13 @@ export default async function UpgradePage() {
     subscription?.trial_ends_at &&
     new Date(subscription.trial_ends_at) > new Date()
 
-  if (isActive || isTrialing) {
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('beta_user')
+    .eq('id', user.id)
+    .single()
+
+  if (isActive || isTrialing || profile?.beta_user) {
     redirect('/dashboard')
   }
 

@@ -13,6 +13,7 @@ create table public.profiles (
   payment_link text,
   total_recovered numeric(14,2) default 0,
   thank_you_enabled boolean default false,
+  beta_user boolean default false,
   created_at timestamptz default now()
 );
 
@@ -22,6 +23,7 @@ create table public.profiles (
 -- ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS payment_link text;
 -- ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS total_recovered numeric(14,2) DEFAULT 0;
 -- ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS thank_you_enabled boolean DEFAULT false;
+-- ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS beta_user boolean DEFAULT false;
 
 alter table public.profiles enable row level security;
 
