@@ -1,8 +1,27 @@
-'use client'
-
+import { createClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
 import Link from 'next/link'
 
-export default function ConnectPage() {
+export default async function ConnectPage() {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    redirect('/login')
+  }
+
+  // If user already has a Xero connection, skip to dashboard
+  const { data: connection } = await supabase
+    .from('connections')
+    .select('id')
+    .eq('user_id', user.id)
+    .is('disconnected_at', null)
+    .single()
+
+  if (connection) {
+    redirect('/dashboard')
+  }
+
   return (
     <div className="min-h-screen bg-paper flex items-center justify-center px-4">
       <div className="max-w-[480px] w-full">
@@ -20,7 +39,6 @@ export default function ConnectPage() {
           We&apos;ll show you what we found. Read-only access. We never touch your invoices.
         </p>
 
-        {/* Xero — active */}
         <a
           href="/api/xero/connect"
           className="flex items-center gap-4 p-5 bg-white border border-line rounded-xl hover:border-ink hover:shadow-md transition-all group mb-3"
@@ -38,7 +56,6 @@ export default function ConnectPage() {
           </svg>
         </a>
 
-        {/* QuickBooks — coming soon */}
         <div className="flex items-center gap-4 p-5 bg-white border border-line rounded-xl opacity-50 mb-3">
           <div className="w-11 h-11 rounded-lg flex items-center justify-center text-white font-extrabold text-sm"
                style={{ background: '#2CA01C' }}>
@@ -50,7 +67,6 @@ export default function ConnectPage() {
           </div>
         </div>
 
-        {/* Sage — coming soon */}
         <div className="flex items-center gap-4 p-5 bg-white border border-line rounded-xl opacity-50">
           <div className="w-11 h-11 rounded-lg flex items-center justify-center font-extrabold text-sm"
                style={{ background: '#00D639', color: '#003D10' }}>
