@@ -12,6 +12,63 @@ function escapeHtml(str: string): string {
     .replace(/'/g, '&#39;')
 }
 
+function processCustomTemplate(
+  template: { subject: string; body: string },
+  invoice: any,
+  businessName: string,
+  unsubscribeUrl: string,
+  options: { statutoryInterest?: boolean; paymentLink?: string },
+  stage: number,
+) {
+  const firstName = invoice.contact_name?.split(' ')[0] || 'there'
+  const amount = `£${Number(invoice.amount_due).toLocaleString('en-GB', { minimumFractionDigits: 2 })}`
+  const number = invoice.invoice_number || 'your invoice'
+  const dueDate = new Date(invoice.due_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+  const sender = businessName
+
+  const replaceTags = (text: string) =>
+    text
+      .replace(/\{\{first_name\}\}/g, firstName)
+      .replace(/\{\{amount\}\}/g, amount)
+      .replace(/\{\{invoice_number\}\}/g, number)
+      .replace(/\{\{due_date\}\}/g, dueDate)
+      .replace(/\{\{business_name\}\}/g, sender)
+
+  const subject = replaceTags(template.subject)
+  const bodyText = replaceTags(template.body)
+
+  const footer = `<p style="color:#999;font-size:12px;margin-top:32px;border-top:1px solid #eee;padding-top:16px">Sent by ${escapeHtml(sender)} · <a href="${unsubscribeUrl}" style="color:#999">Unsubscribe</a></p>`
+
+  const payButton = options.paymentLink
+    ? `<p style="margin-top:20px"><a href="${escapeHtml(options.paymentLink)}" style="display:inline-block;background:#E8420E;color:white;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600;font-size:15px">Pay this invoice</a></p>`
+    : ''
+
+  let interestParagraph = ''
+  if (options.statutoryInterest && (stage === 3 || stage === 4)) {
+    const amountNum = Number(invoice.amount_due)
+    const daysOverdue = Math.max(0, Math.floor((Date.now() - new Date(invoice.due_date).getTime()) / (1000 * 60 * 60 * 24)))
+    const interest = amountNum * 0.1175 / 365 * daysOverdue
+    const compensation = amountNum >= 10000 ? 100 : amountNum >= 1000 ? 70 : 40
+    const interestFormatted = `£${interest.toFixed(2)}`
+    const compFormatted = `£${compensation.toFixed(2)}`
+    interestParagraph = `<p style="margin-top:16px;padding:16px;background:#f9f9f6;border-left:3px solid #ddd;font-size:13px;color:#555">Under the Late Payment of Commercial Debts Act 1998, statutory interest of ${interestFormatted} has accrued on this invoice (8% + Bank of England base rate of 3.75%, calculated daily from the due date). Compensation of ${compFormatted} is also applicable.</p>`
+  }
+
+  // Convert newlines to <p> tags
+  const bodyHtml = bodyText
+    .split('\n\n')
+    .map((para: string) => `<p>${escapeHtml(para.trim())}</p>`)
+    .join('\n')
+
+  return {
+    subject,
+    html: `${bodyHtml}
+${interestParagraph}
+${payButton}
+${footer}`,
+  }
+}
+
 function getEmailContent(
   stage: number,
   invoice: any,
@@ -129,6 +186,12 @@ export async function GET(request: Request) {
     return NextResponse.json({ sent: 0, message: 'No invoices to chase' })
   }
 
+  // Fetch custom templates for all active users
+  const { data: allTemplates } = await supabaseAdmin
+    .from('chase_templates')
+    .select('user_id, stage, subject, body')
+    .in('user_id', allowedUserIds)
+
   for (const invoice of invoices) {
     try {
       const { data: existingEmails } = await supabaseAdmin
@@ -181,10 +244,18 @@ export async function GET(request: Request) {
       const unsubscribeToken = Buffer.from(invoice.id).toString('base64url')
       const unsubscribeUrl = `https://www.owedhq.com/unsubscribe?token=${unsubscribeToken}`
 
-      const { subject, html } = getEmailContent(nextStage, invoice, businessName, unsubscribeUrl, {
+      const customTemplate = allTemplates?.find(
+        (t: any) => t.user_id === invoice.user_id && t.stage === nextStage
+      )
+
+      const emailOptions = {
         statutoryInterest: profile?.statutory_interest_enabled || false,
         paymentLink: profile?.payment_link || undefined,
-      })
+      }
+
+      const { subject, html } = customTemplate
+        ? processCustomTemplate(customTemplate, invoice, businessName, unsubscribeUrl, emailOptions, nextStage)
+        : getEmailContent(nextStage, invoice, businessName, unsubscribeUrl, emailOptions)
 
       // Use business name as sender display name
       const fromEmail = process.env.RESEND_FROM_EMAIL || 'accounts@owedhq.com'

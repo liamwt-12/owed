@@ -211,7 +211,29 @@ create policy "Users can insert own invoice_activity"
   with check (auth.uid() = user_id);
 
 
--- 8. Helper function: increment recovered amount
+-- 8. Chase email templates (user-customisable)
+create table public.chase_templates (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references public.profiles not null,
+  stage int not null check (stage between 1 and 4),
+  subject text not null,
+  body text not null,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now(),
+  unique(user_id, stage)
+);
+
+alter table public.chase_templates enable row level security;
+
+create policy "Users can view own templates"
+  on public.chase_templates for select using (auth.uid() = user_id);
+create policy "Users can insert own templates"
+  on public.chase_templates for insert with check (auth.uid() = user_id);
+create policy "Users can update own templates"
+  on public.chase_templates for update using (auth.uid() = user_id);
+
+
+-- 9. Helper function: increment recovered amount
 create or replace function increment_recovered(amount numeric)
 returns void as $$
   update platform_stats

@@ -4,6 +4,7 @@ import { SettingsForm } from './SettingsForm'
 import { SyncButton } from './SyncButton'
 import { DisconnectButton } from './DisconnectButton'
 import { ManageBillingButton } from './ManageBillingButton'
+import { EmailTemplates } from './EmailTemplates'
 
 export default async function SettingsPage() {
   const supabase = createClient()
@@ -93,33 +94,8 @@ export default async function SettingsPage() {
         <p className="text-xs text-muted mt-2">View invoices, update payment method, or cancel.</p>
       </div>
 
-      {/* Email preview */}
-      <div className="bg-white border border-line rounded-2xl p-6 mb-4">
-        <h2 className="text-sm font-semibold text-ink mb-1">Email preview</h2>
-        <p className="text-xs text-muted mb-4">This is what your clients see when Owed chases on your behalf.</p>
-        <div className="bg-paper border border-line rounded-xl p-5">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="text-xs text-faint">From:</div>
-            <div className="text-xs text-ink font-medium">{profile?.business_name || 'Your Business'} &lt;accounts@owedhq.com&gt;</div>
-          </div>
-          <div className="flex items-center gap-2 mb-3">
-            <div className="text-xs text-faint">Reply-To:</div>
-            <div className="text-xs text-ink font-medium">{profile?.email || user.email}</div>
-          </div>
-          <div className="border-t border-line pt-3 mt-1">
-            <p className="text-xs font-medium text-ink mb-2">Invoice INV-001 &mdash; Quick reminder</p>
-            <p className="text-xs text-muted leading-relaxed">
-              Hi there,<br /><br />
-              Just a quick note that invoice INV-001 for &pound;500.00 was due on 1 January 2026. If you&apos;ve already sent payment, please ignore this.<br /><br />
-              Thanks,<br />
-              {profile?.business_name || 'Your Business'}
-            </p>
-            <p className="text-[10px] text-faint mt-4 pt-3 border-t border-line">
-              Sent by {profile?.business_name || 'Your Business'}
-            </p>
-          </div>
-        </div>
-      </div>
+      {/* Chase email templates */}
+      <EmailTemplates />
 
       {/* Account */}
       <div className="bg-white border border-line rounded-2xl p-6">
