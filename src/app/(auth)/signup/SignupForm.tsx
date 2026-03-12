@@ -33,7 +33,7 @@ export function SignupForm() {
       setLoading(false)
     } else {
       if (isBeta) {
-        localStorage.setItem('owed_beta', 'true')
+        document.cookie = 'owed_beta=OWED2026; path=/; max-age=3600; SameSite=Lax'
       }
       setSuccess(true)
       setLoading(false)
