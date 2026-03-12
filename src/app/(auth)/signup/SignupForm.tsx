@@ -68,6 +68,23 @@ export function SignupForm() {
               14 days free. No credit card needed.
             </p>
 
+            <a
+              href="/api/auth/xero-sso/connect"
+              className="w-full flex items-center justify-center gap-2.5 py-2.5 px-4 bg-white border-2 border-[#13B5EA] rounded-lg text-[15px] font-semibold text-ink hover:bg-[#f0faff] transition-colors"
+            >
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="10" cy="10" r="10" fill="#13B5EA"/>
+                <path d="M10.027 10.001l2.934-2.934a.375.375 0 10-.53-.53L9.497 9.471 6.563 6.537a.375.375 0 10-.53.53l2.934 2.934-2.933 2.933a.375.375 0 00.53.53l2.933-2.933 2.934 2.934a.375.375 0 00.53-.53l-2.934-2.934z" fill="white"/>
+              </svg>
+              Sign up with Xero
+            </a>
+
+            <div className="flex items-center gap-3 my-6">
+              <div className="flex-1 h-px bg-line" />
+              <span className="text-xs text-faint font-medium">or</span>
+              <div className="flex-1 h-px bg-line" />
+            </div>
+
             <form onSubmit={handleSignup} className="space-y-4">
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-ink mb-1.5">
