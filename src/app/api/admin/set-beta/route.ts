@@ -2,11 +2,11 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
 export async function POST(request: Request) {
-  const { email, secret } = await request.json()
-
-  if (secret !== process.env.ADMIN_SECRET) {
+  if (request.headers.get('x-admin-secret')?.trim() !== process.env.ADMIN_SECRET?.trim()) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
+
+  const { email } = await request.json()
 
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
