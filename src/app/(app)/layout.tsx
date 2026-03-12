@@ -107,6 +107,14 @@ export default async function AppLayout({
         )}
         {children}
       </main>
+
+      <footer className="md:ml-[240px] px-4 md:px-8 py-4 flex items-center justify-center gap-4 text-xs text-muted">
+        <a href="/privacy" className="hover:text-ink transition-colors">Privacy</a>
+        <span className="text-faint">&middot;</span>
+        <a href="/terms" className="hover:text-ink transition-colors">Terms</a>
+        <span className="text-faint">&middot;</span>
+        <a href="/support" className="hover:text-ink transition-colors">Support</a>
+      </footer>
     </div>
   )
 }
