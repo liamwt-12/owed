@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pricing | Owed — Invoice Chasing on Autopilot</title>
+  <meta name="description" content="Owed is £29/month. Unlimited invoices, 4-stage chase sequence, Xero integration, statutory interest calculations, and our 5x Recovery Promise. 14-day free trial, no card required.">
+  <link rel="canonical" href="https://www.owedhq.com/pricing.html">
+  <meta property="og:title" content="Pricing | Owed — Invoice Chasing on Autopilot">
+  <meta property="og:description" content="One simple plan. £29/month. Unlimited invoices. 14-day free trial. Backed by our 5x Recovery Promise.">
+  <meta property="og:url" content="https://www.owedhq.com/pricing.html">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://www.owedhq.com/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&amp;family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400;1,500&amp;family=Instrument+Serif:ital@0;1&amp;display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --ink: #0F0E0C; --ink-2: #2A2925; --muted: #6E6B63; --faint: #B5B2AA;
+      --paper: #FAF9F6; --cream: #F2EFE8; --line: #E4E0D8;
+      --pop: #E8420E; --pop-pale: #FEF0EB;
+      --green: #1A6644; --green-pale: #E8F5EE;
+      --amber: #D4820A; --amber-pale: #FDF3E3;
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Instrument Sans', sans-serif; background: var(--paper); color: var(--ink); overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+
+    nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; padding: 0 40px; height: 60px; display: flex; align-items: center; justify-content: space-between; background: rgba(250,249,246,0.9); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
+    .nav-logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 18px; letter-spacing: -0.5px; color: var(--ink); display: flex; align-items: center; gap: 8px; text-decoration: none; }
+    .nav-logo-dot { width: 8px; height: 8px; background: var(--pop); border-radius: 50%; }
+    .nav-links { display: flex; align-items: center; gap: 28px; list-style: none; }
+    .nav-links a { font-size: 14px; color: var(--muted); text-decoration: none; font-weight: 500; transition: color 0.15s; }
+    .nav-links a:hover { color: var(--ink); }
+    .nav-cta { background: var(--ink) !important; color: var(--paper) !important; padding: 8px 18px; border-radius: 6px; font-weight: 600 !important; font-size: 13.5px !important; transition: background 0.15s !important; }
+    .nav-cta:hover { background: var(--ink-2) !important; }
+
+    footer { padding: 32px 40px; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--line); max-width: 1200px; margin: 0 auto; }
+    .footer-logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 15px; color: var(--ink); }
+    .footer-links { display: flex; gap: 24px; list-style: none; flex-wrap: wrap; }
+    .footer-links a { font-size: 13px; color: var(--faint); text-decoration: none; transition: color 0.15s; }
+    .footer-links a:hover { color: var(--ink); }
+    .footer-copy { font-size: 12px; color: var(--faint); }
+    @media (max-width: 900px) { nav { padding: 0 20px; } footer { flex-direction: column; gap: 16px; text-align: center; padding: 24px 20px; } }
+    @media (max-width: 600px) { .nav-links a:not(.nav-cta) { display: none; } .footer-links { justify-content: center; } }
+
+    .page { max-width: 720px; margin: 0 auto; padding: 120px 24px 80px; }
+    .page-header { text-align: center; margin-bottom: 48px; }
+    .section-label { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: var(--faint); margin-bottom: 16px; }
+    h1 { font-family: 'Syne', sans-serif; font-weight: 800; letter-spacing: -0.04em; font-size: clamp(34px, 5vw, 56px); line-height: 1.0; color: var(--ink); }
+    h1 em { font-style: italic; font-family: 'Instrument Serif', serif; font-weight: 400; color: var(--pop); letter-spacing: -0.02em; }
+    h2 { font-family: 'Syne', sans-serif; font-weight: 800; letter-spacing: -0.035em; font-size: clamp(24px, 3vw, 32px); line-height: 1.15; color: var(--ink); margin-bottom: 16px; }
+    .subtitle { font-size: 18px; color: var(--muted); line-height: 1.6; margin-top: 18px; max-width: 540px; margin-left: auto; margin-right: auto; }
+
+    /* PRICING CARD */
+    .price-card { background: white; border: 1px solid var(--line); border-radius: 20px; padding: 40px; box-shadow: 0 1px 0 rgba(0,0,0,0.02), 0 8px 32px -16px rgba(0,0,0,0.06); }
+    .price-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: var(--pop); background: var(--pop-pale); border: 1px solid #F5C4B5; padding: 5px 12px; border-radius: 20px; margin-bottom: 20px; }
+    .price-amount { display: flex; align-items: baseline; gap: 6px; margin-bottom: 6px; }
+    .price-number { font-family: 'Syne', sans-serif; font-size: 72px; font-weight: 800; letter-spacing: -0.04em; color: var(--ink); line-height: 1; }
+    .price-suffix { font-size: 16px; color: var(--muted); font-weight: 500; }
+    .price-tagline { font-size: 14.5px; color: var(--muted); margin-bottom: 28px; }
+    .price-features { list-style: none; display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px; }
+    .price-features li { font-size: 15px; color: var(--ink-2); display: flex; align-items: flex-start; gap: 12px; line-height: 1.5; }
+    .price-features li::before { content: '✓'; color: var(--green); font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+    .price-cta { display: block; text-align: center; background: var(--ink); color: var(--paper); padding: 16px 28px; border-radius: 10px; font-size: 15.5px; font-weight: 600; text-decoration: none; transition: all 0.2s; }
+    .price-cta:hover { background: var(--ink-2); transform: translateY(-1px); }
+    .price-fineprint { text-align: center; font-size: 13px; color: var(--muted); margin-top: 14px; }
+
+    .annual-teaser { margin-top: 24px; background: var(--amber-pale); border: 1px dashed #E6BF7A; border-radius: 12px; padding: 18px 22px; text-align: center; font-size: 14px; color: var(--ink-2); }
+    .annual-teaser strong { color: var(--amber); font-weight: 700; }
+
+    /* PROMISE */
+    .promise { margin-top: 64px; background: var(--green-pale); border: 1px solid #C8E2D2; border-radius: 16px; padding: 32px; }
+    .promise-label { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: var(--green); margin-bottom: 12px; }
+    .promise-title { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 800; letter-spacing: -0.03em; color: var(--ink); margin-bottom: 12px; line-height: 1.2; }
+    .promise-body { font-size: 15px; color: var(--ink-2); line-height: 1.7; }
+    .promise-body strong { color: var(--ink); font-weight: 600; }
+
+    /* FAQ */
+    .faq { margin-top: 64px; }
+    .faq h2 { text-align: center; margin-bottom: 28px; }
+    .faq-item { background: white; border: 1px solid var(--line); border-radius: 12px; padding: 22px 24px; margin-bottom: 12px; }
+    .faq-q { font-size: 16px; font-weight: 600; color: var(--ink); margin-bottom: 8px; }
+    .faq-a { font-size: 14.5px; color: var(--muted); line-height: 1.65; }
+    .faq-a strong { color: var(--ink); font-weight: 600; }
+  </style>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": "Owed",
+    "description": "Invoice chasing on autopilot. Connects to Xero and chases overdue invoices automatically.",
+    "brand": { "@type": "Brand", "name": "Owed" },
+    "offers": {
+      "@type": "Offer",
+      "price": "29.00",
+      "priceCurrency": "GBP",
+      "availability": "https://schema.org/InStock",
+      "url": "https://www.owedhq.com/pricing.html"
+    }
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Is there a free trial?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Yes. 14 days free, no card required. You can cancel anytime during the trial and you won't be charged." }
+      },
+      {
+        "@type": "Question",
+        "name": "Are there invoice limits?",
+        "acceptedAnswer": { "@type": "Answer", "text": "No. £29/month gives you unlimited invoice chasing. There are no revenue caps, no overage fees, no tiered limits." }
+      },
+      {
+        "@type": "Question",
+        "name": "Can I cancel anytime?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Yes. There's no annual contract. Cancel at any time from your account settings — your subscription ends at the end of the current billing month." }
+      },
+      {
+        "@type": "Question",
+        "name": "What is the Recovery Promise?",
+        "acceptedAnswer": { "@type": "Answer", "text": "If Owed doesn't recover at least 5x your subscription cost (£435) in your first 90 days, your next 3 months are free. It's applied automatically — you don't need to ask." }
+      },
+      {
+        "@type": "Question",
+        "name": "Do you work with QuickBooks or Sage?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Xero only for now. QuickBooks support is coming soon. Sage integration is on the roadmap but further out." }
+      }
+    ]
+  }
+  </script>
+</head>
+<body>
+  <nav>
+    <a href="/" class="nav-logo"><div class="nav-logo-dot"></div>owed</a>
+    <ul class="nav-links">
+      <li><a href="/pricing.html">Pricing</a></li>
+      <li><a href="/for-accountants.html">For accountants</a></li>
+      <li><a href="/login">Log in</a></li>
+      <li><a href="/signup" class="nav-cta">Start free trial</a></li>
+    </ul>
+  </nav>
+
+  <main class="page">
+    <div class="page-header">
+      <div class="section-label">Pricing</div>
+      <h1>One plan. <em>One price.</em></h1>
+      <p class="subtitle">No tiers. No revenue caps. No annual contracts. Just invoice chasing that pays for itself.</p>
+    </div>
+
+    <div class="price-card">
+      <div class="price-eyebrow"><span style="width:6px;height:6px;background:var(--pop);border-radius:50%;"></span>Owed Standard</div>
+      <div class="price-amount">
+        <span class="price-number">&pound;29</span>
+        <span class="price-suffix">/ month</span>
+      </div>
+      <div class="price-tagline">Cancel anytime. No card required for trial.</div>
+
+      <ul class="price-features">
+        <li><strong>Unlimited invoices</strong> &mdash; no revenue caps, no overage fees</li>
+        <li><strong>4-stage chase sequence</strong> &mdash; warm, professional, progressively firm</li>
+        <li><strong>Xero integration</strong> &mdash; connects in two minutes, syncs automatically</li>
+        <li><strong>Statutory interest calculations</strong> &mdash; under the Late Payment Act 1998</li>
+        <li><strong>Automatic payment detection</strong> &mdash; chasing stops the moment you&rsquo;re paid</li>
+        <li><strong>Editable email templates</strong> &mdash; in your tone, in your name</li>
+        <li><strong>14-day free trial</strong> &mdash; no card required</li>
+      </ul>
+
+      <a href="/signup" class="price-cta">Start free trial</a>
+      <p class="price-fineprint">14 days free &middot; &pound;29/month after &middot; Cancel anytime</p>
+    </div>
+
+    <div class="annual-teaser">
+      <strong>Annual pricing coming soon</strong> &mdash; save &pound;99/year when we launch it.
+    </div>
+
+    <div class="promise">
+      <div class="promise-label">The 5&times; Recovery Promise</div>
+      <div class="promise-title">If we don&rsquo;t recover 5&times; your subscription in 90 days, your next 3 months are free.</div>
+      <div class="promise-body">We&rsquo;re so confident Owed will pay for itself many times over that we put it in writing. If, in your first 90 days, Owed hasn&rsquo;t recovered at least <strong>&pound;435</strong> of overdue invoices for you (5&times; the &pound;87 you&rsquo;ll have spent), your next three months are completely free. It&rsquo;s applied <strong>automatically</strong> &mdash; you don&rsquo;t need to ask, you don&rsquo;t need to email support, you don&rsquo;t need to fill out a form. We just don&rsquo;t charge you.</div>
+    </div>
+
+    <div class="faq">
+      <h2>Frequently asked</h2>
+
+      <div class="faq-item">
+        <div class="faq-q">Is there a free trial?</div>
+        <div class="faq-a">Yes &mdash; <strong>14 days free, no card required</strong>. You can connect Xero, run real chases on real invoices, and only decide whether to subscribe at the end. If it&rsquo;s not for you, walk away &mdash; you won&rsquo;t be charged.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">Are there invoice limits?</div>
+        <div class="faq-a">No. <strong>Unlimited invoices</strong> on the &pound;29/month plan. We don&rsquo;t cap by revenue, by volume, or by anything else. Chase as many invoices as you have.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">Can I cancel anytime?</div>
+        <div class="faq-a">Yes. There&rsquo;s no annual commitment. Cancel from your account settings whenever you like &mdash; your subscription runs to the end of the current billing month and then stops.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">What is the Recovery Promise?</div>
+        <div class="faq-a">If Owed doesn&rsquo;t recover at least <strong>5&times; your subscription cost (&pound;435)</strong> within the first 90 days, your next 3 months are free. We track it automatically and apply the credit without you having to ask. We&rsquo;ve put it in writing because we genuinely believe Owed pays for itself many times over &mdash; and if it doesn&rsquo;t, you shouldn&rsquo;t be paying for it.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">Do you work with QuickBooks or Sage?</div>
+        <div class="faq-a"><strong>Xero only for now.</strong> QuickBooks integration is coming soon &mdash; you can join the waitlist by signing up and selecting QuickBooks during onboarding. Sage is on the roadmap but further out.</div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="footer-logo">owed</div>
+    <ul class="footer-links">
+      <li><a href="/pricing.html">Pricing</a></li>
+      <li><a href="/calculator.html">Interest calculator</a></li>
+      <li><a href="/for-accountants.html">For accountants</a></li>
+      <li><a href="/compare/owed-vs-chaser.html">Owed vs Chaser</a></li>
+      <li><a href="/privacy">Privacy</a></li>
+      <li><a href="/terms">Terms</a></li>
+      <li><a href="/support">Support</a></li>
+    </ul>
+    <div class="footer-copy">&copy; 2026 Owed &middot; Built in the UK &#x1F1EC;&#x1F1E7;</div>
+  </footer>
+</body>
+</html>

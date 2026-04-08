@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>For Accountants | Owed — Stop Chasing Your Clients' Invoices</title>
-  <meta name="description" content="Recommend Owed to your clients. They connect Xero, professional chase emails go out automatically, and you never have to chase their invoices again.">
+  <title>For Accountants | Owed — Recommend Owed to Your Clients</title>
+  <meta name="description" content="Accountants see late payment stress every day. Recommend Owed to your clients — they connect Xero, professional chase emails go out automatically, and you stop fielding 'can you chase this for me?' calls.">
   <link rel="canonical" href="https://www.owedhq.com/for-accountants.html">
-  <meta property="og:title" content="For Accountants | Owed — Stop Chasing Your Clients' Invoices">
-  <meta property="og:description" content="Recommend Owed to your clients. They connect Xero, professional chase emails go out automatically, and you never have to chase their invoices again.">
+  <meta property="og:title" content="For Accountants | Owed — Recommend Owed to Your Clients">
+  <meta property="og:description" content="One recommendation could help dozens of your clients. Hand them Owed.">
   <meta property="og:url" content="https://www.owedhq.com/for-accountants.html">
   <meta property="og:type" content="website">
   <meta property="og:image" content="https://www.owedhq.com/og-image.png">
@@ -49,27 +49,54 @@
     /* PAGE */
     .page { max-width: 720px; margin: 0 auto; padding: 120px 24px 80px; }
     .section-label { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: var(--faint); margin-bottom: 16px; }
-    h1 { font-family: 'Syne', sans-serif; font-weight: 800; letter-spacing: -0.04em; font-size: clamp(30px, 4vw, 46px); line-height: 1.05; color: var(--ink); }
-    h2 { font-family: 'Syne', sans-serif; font-weight: 800; letter-spacing: -0.035em; font-size: clamp(24px, 3vw, 36px); line-height: 1.1; color: var(--ink); margin-bottom: 16px; }
-    .subtitle { font-size: 18px; color: var(--muted); line-height: 1.6; margin-top: 16px; }
+    h1 { font-family: 'Syne', sans-serif; font-weight: 800; letter-spacing: -0.04em; font-size: clamp(32px, 4.5vw, 52px); line-height: 1.05; color: var(--ink); }
+    h1 em { font-style: italic; font-family: 'Instrument Serif', serif; font-weight: 400; color: var(--pop); letter-spacing: -0.02em; }
+    h2 { font-family: 'Syne', sans-serif; font-weight: 800; letter-spacing: -0.035em; font-size: clamp(24px, 3vw, 34px); line-height: 1.15; color: var(--ink); margin-bottom: 16px; }
+    .subtitle { font-size: 18px; color: var(--muted); line-height: 1.6; margin-top: 18px; }
     .section { margin-top: 64px; }
-    .section + .section { margin-top: 48px; }
-    .body-text { font-size: 15px; color: var(--muted); line-height: 1.7; margin-top: 12px; }
-    .card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 24px; margin-bottom: 12px; }
-    .card-title { font-size: 16px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
-    .card-body { font-size: 14px; color: var(--muted); line-height: 1.6; }
+    .body-text { font-size: 16px; color: var(--ink-2); line-height: 1.75; margin-top: 14px; }
+    .body-text strong { color: var(--ink); font-weight: 600; }
+
+    .step-list { display: flex; flex-direction: column; gap: 12px; margin-top: 24px; }
+    .step { background: white; border: 1px solid var(--line); border-radius: 12px; padding: 22px 24px; display: flex; gap: 18px; align-items: flex-start; }
+    .step-num { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; color: var(--pop); line-height: 1; flex-shrink: 0; }
+    .step-title { font-size: 16px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+    .step-body { font-size: 14.5px; color: var(--muted); line-height: 1.6; }
+
+    /* MULTIPLIER */
+    .multiplier { margin-top: 56px; background: var(--cream); border-radius: 16px; padding: 32px; }
+    .multiplier-eyebrow { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: var(--pop); margin-bottom: 10px; }
+    .multiplier-title { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; letter-spacing: -0.03em; color: var(--ink); margin-bottom: 12px; line-height: 1.15; }
+    .multiplier-body { font-size: 15px; color: var(--ink-2); line-height: 1.7; }
+
+    /* TESTIMONIAL PLACEHOLDER */
+    .testimonial-placeholder { margin-top: 56px; border: 1px dashed var(--line); border-radius: 16px; padding: 40px; text-align: center; color: var(--faint); font-size: 14px; font-style: italic; }
+
+    /* FORM */
+    .form-section { margin-top: 64px; background: white; border: 1px solid var(--line); border-radius: 16px; padding: 36px; }
+    .form-title { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; letter-spacing: -0.03em; color: var(--ink); margin-bottom: 8px; }
+    .form-sub { font-size: 14.5px; color: var(--muted); margin-bottom: 24px; line-height: 1.6; }
+    .form-row { display: flex; flex-direction: column; gap: 6px; margin-bottom: 18px; }
+    .form-row label { font-size: 13px; font-weight: 600; color: var(--ink); }
+    .form-row input, .form-row select { font-family: 'Instrument Sans', sans-serif; font-size: 15px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); color: var(--ink); transition: border-color 0.15s, box-shadow 0.15s; }
+    .form-row input:focus, .form-row select:focus { outline: none; border-color: var(--ink); box-shadow: 0 0 0 3px rgba(15,14,12,0.06); }
+    .form-honeypot { position: absolute; left: -9999px; visibility: hidden; }
+    .form-submit { display: inline-flex; align-items: center; justify-content: center; background: var(--ink); color: var(--paper); padding: 14px 28px; border-radius: 8px; font-size: 15px; font-weight: 600; border: none; cursor: pointer; font-family: 'Instrument Sans', sans-serif; transition: background 0.15s; width: 100%; }
+    .form-submit:hover { background: var(--ink-2); }
+    .form-fineprint { font-size: 12px; color: var(--faint); margin-top: 14px; text-align: center; line-height: 1.5; }
+
     .cta-box { margin-top: 64px; background: var(--cream); border-radius: 16px; padding: 40px; text-align: center; }
-    .cta-box h2 { font-size: 24px; margin-bottom: 20px; }
+    .cta-box h2 { font-size: 24px; margin-bottom: 18px; }
     .cta-btn { display: inline-flex; align-items: center; background: var(--ink); color: var(--paper); padding: 14px 28px; border-radius: 8px; font-size: 15px; font-weight: 600; text-decoration: none; transition: background 0.15s; }
     .cta-btn:hover { background: var(--ink-2); }
     .cta-sub { font-size: 13px; color: var(--muted); margin-top: 16px; }
-    .cta-sub a { color: var(--muted); text-decoration: underline; }
   </style>
 </head>
 <body>
   <nav>
     <a href="/" class="nav-logo"><div class="nav-logo-dot"></div>owed</a>
     <ul class="nav-links">
+      <li><a href="/pricing.html">Pricing</a></li>
       <li><a href="/login">Log in</a></li>
       <li><a href="/signup" class="nav-cta">Start free trial</a></li>
     </ul>
@@ -77,53 +104,120 @@
 
   <main class="page">
     <div class="section-label">For accountants</div>
-    <h1>Stop chasing your clients' invoices for them.</h1>
-    <p class="subtitle">Recommend Owed. They handle it themselves. You look like a hero.</p>
+    <h1>Recommend Owed to your clients. <em>They&rsquo;ll thank you for it.</em></h1>
+    <p class="subtitle">You see late payment stress every day &mdash; cash flow gaps, year-end write-offs, panicked phone calls. Here&rsquo;s something you can actually hand them.</p>
 
     <div class="section">
       <h2>You know the drill.</h2>
-      <p class="body-text">Your client calls. Again. 'Can you just chase this invoice for me?' You're not a debt collector. You're their accountant. But somebody has to do it — and somehow that somebody is always you. Meanwhile, their cash flow tanks, year-end is a mess, and you're writing off bad debts that should never have been bad debts.</p>
+      <p class="body-text">Your client calls. Again. &ldquo;Can you just chase this invoice for me?&rdquo; You&rsquo;re not a debt collector &mdash; you&rsquo;re their accountant. But somebody has to do it, and somehow that somebody is always you. Meanwhile their cash flow tanks, year-end becomes a salvage operation, and you&rsquo;re writing off bad debts that should never have been bad debts. <strong>62% of UK small businesses are dealing with overdue invoices right now.</strong> You see the human cost of that statistic every single week.</p>
     </div>
 
     <div class="section">
-      <h2>Recommend Owed. Walk away.</h2>
-      <p class="body-text">Your client connects their Xero account. Owed finds every overdue invoice and sends a professional 4-stage email sequence — in their name, not yours. Friendly at first. Firmer as time goes on. Never aggressive. The moment Xero marks an invoice as paid, chasing stops automatically.</p>
-      <p class="body-text">You don't need to set it up. You don't need to manage it. You just tell your client about it and move on with your actual job.</p>
+      <h2>How it works for your clients</h2>
+      <div class="step-list">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div>
+            <div class="step-title">They connect Xero in two minutes</div>
+            <div class="step-body">Self-serve. No demos, no implementation calls, no consultancy hours. They do it themselves in the time it takes you to make a coffee.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div>
+            <div class="step-title">Owed finds every overdue invoice automatically</div>
+            <div class="step-body">No setup of debtor lists. No data entry. Owed reads their Xero ledger and identifies every invoice that&rsquo;s gone past its due date.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div>
+            <div class="step-title">A 4-stage chase sequence runs &mdash; in their name</div>
+            <div class="step-body">Warm at first, progressively firmer. Relationship-safe by design. The emails sound like your client wrote them, not a tool. Statutory interest under the Late Payment Act 1998 is calculated and woven in automatically.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div>
+            <div class="step-title">Chasing stops the moment Xero marks &ldquo;paid&rdquo;</div>
+            <div class="step-body">No awkward extra emails. No client phoning you saying &ldquo;but I&rsquo;ve already paid them.&rdquo; The moment money lands, the sequence stops.</div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div class="section">
-      <h2>Why you should care</h2>
-      <div class="card">
-        <div class="card-title">Healthier client cash flow</div>
-        <div class="card-body">Clients who get paid on time have cleaner books, fewer surprises, and less stress at year-end. That's less work for you.</div>
-      </div>
-      <div class="card">
-        <div class="card-title">Fewer bad debts</div>
-        <div class="card-body">Invoices that get chased consistently are far more likely to get paid. The ones that don't get chased become write-offs. You've seen it happen.</div>
-      </div>
-      <div class="card">
-        <div class="card-title">You look proactive</div>
-        <div class="card-body">Recommending a tool that solves a genuine problem? That's the kind of thing clients remember when they're choosing whether to stay.</div>
-      </div>
+    <div class="multiplier">
+      <div class="multiplier-eyebrow">The multiplier</div>
+      <div class="multiplier-title">One recommendation. Dozens of clients helped.</div>
+      <div class="multiplier-body">Most accountancy practices have <strong>50&ndash;200 small business clients</strong>, and a meaningful chunk of them are struggling with the same problem in slightly different shapes. A single message in your next monthly client newsletter &mdash; or a line dropped into your year-end pack &mdash; can put dozens of your clients in a materially better cash position. You don&rsquo;t have to do anything else. They take it from there.</div>
+    </div>
+
+    <div class="testimonial-placeholder">
+      [ Testimonials from accountants will appear here as the practice partner programme grows. ]
+    </div>
+
+    <div class="form-section">
+      <div class="form-title">Tell us about your practice</div>
+      <div class="form-sub">If you&rsquo;d like to learn more about recommending Owed to your clients (and what we can do for accountants who do), drop your details below. We&rsquo;ll be in touch personally &mdash; no automation, no drip sequence.</div>
+
+      <form name="accountant-interest" method="POST" data-netlify="true" data-netlify-honeypot="bot-field" action="/for-accountants.html?submitted=1">
+        <input type="hidden" name="form-name" value="accountant-interest">
+
+        <p class="form-honeypot">
+          <label>Don&rsquo;t fill this out if you&rsquo;re human: <input name="bot-field" tabindex="-1" autocomplete="off"></label>
+        </p>
+
+        <div class="form-row">
+          <label for="ai-name">Your name</label>
+          <input id="ai-name" type="text" name="name" required autocomplete="name">
+        </div>
+
+        <div class="form-row">
+          <label for="ai-practice">Practice name</label>
+          <input id="ai-practice" type="text" name="practice" required autocomplete="organization">
+        </div>
+
+        <div class="form-row">
+          <label for="ai-email">Work email</label>
+          <input id="ai-email" type="email" name="email" required autocomplete="email">
+        </div>
+
+        <div class="form-row">
+          <label for="ai-clients">How many clients do you think could benefit?</label>
+          <select id="ai-clients" name="client_estimate" required>
+            <option value="">Choose a range&hellip;</option>
+            <option value="1-10">1&ndash;10</option>
+            <option value="11-25">11&ndash;25</option>
+            <option value="26-50">26&ndash;50</option>
+            <option value="51-100">51&ndash;100</option>
+            <option value="100+">100+</option>
+          </select>
+        </div>
+
+        <button type="submit" class="form-submit">Get in touch</button>
+        <div class="form-fineprint">We&rsquo;ll only use your details to get in touch about the practice partner programme. No marketing automation. Promise.</div>
+      </form>
     </div>
 
     <div class="cta-box">
-      <h2>Tell your clients about Owed.</h2>
+      <h2>Or just send a client to /signup.</h2>
       <a href="/signup" class="cta-btn">Recommend Owed</a>
-      <p class="cta-sub">Want to chat? <a href="mailto:hello@owedhq.com">hello@owedhq.com</a></p>
+      <p class="cta-sub">14-day free trial &middot; &pound;29/month after &middot; Cancel anytime</p>
     </div>
   </main>
 
   <footer>
     <div class="footer-logo">owed</div>
     <ul class="footer-links">
+      <li><a href="/pricing.html">Pricing</a></li>
       <li><a href="/calculator.html">Interest calculator</a></li>
       <li><a href="/for-accountants.html">For accountants</a></li>
-      <li><a href="/email-templates.html">Email templates</a></li>
+      <li><a href="/compare/owed-vs-chaser.html">Owed vs Chaser</a></li>
       <li><a href="/privacy">Privacy</a></li>
       <li><a href="/terms">Terms</a></li>
+      <li><a href="/support">Support</a></li>
     </ul>
-    <div class="footer-copy">&copy; 2025 Owed &middot; Built in the UK &#x1F1EC;&#x1F1E7;</div>
+    <div class="footer-copy">&copy; 2026 Owed &middot; Built in the UK &#x1F1EC;&#x1F1E7;</div>
   </footer>
 </body>
 </html>
