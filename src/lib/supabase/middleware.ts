@@ -25,6 +25,27 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
+  // Admin route protection (cookie-based, separate from Supabase auth)
+  if (request.nextUrl.pathname.startsWith('/admin')) {
+    const isLoginPage = request.nextUrl.pathname === '/admin/login'
+    const isAdminApi = request.nextUrl.pathname.startsWith('/api/admin/')
+    const hasSession = request.cookies.get('admin_session')?.value === 'authenticated'
+
+    if (!isLoginPage && !isAdminApi && !hasSession) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/admin/login'
+      return NextResponse.redirect(url)
+    }
+
+    if (isLoginPage && hasSession) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/admin'
+      return NextResponse.redirect(url)
+    }
+
+    return supabaseResponse
+  }
+
   const {
     data: { user },
   } = await supabase.auth.getUser()
