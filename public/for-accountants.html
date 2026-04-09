@@ -160,12 +160,10 @@
       <div class="form-title">Tell us about your practice</div>
       <div class="form-sub">If you&rsquo;d like to learn more about recommending Owed to your clients (and what we can do for accountants who do), drop your details below. We&rsquo;ll be in touch personally &mdash; no automation, no drip sequence.</div>
 
-      <form name="accountant-interest" method="POST" data-netlify="true" data-netlify-honeypot="bot-field" action="/for-accountants.html?submitted=1">
-        <input type="hidden" name="form-name" value="accountant-interest">
-
-        <p class="form-honeypot">
-          <label>Don&rsquo;t fill this out if you&rsquo;re human: <input name="bot-field" tabindex="-1" autocomplete="off"></label>
-        </p>
+      <form id="accountant-form">
+        <div class="form-honeypot">
+          <label>Website URL <input name="website_url" tabindex="-1" autocomplete="off"></label>
+        </div>
 
         <div class="form-row">
           <label for="ai-name">Your name</label>
@@ -174,7 +172,7 @@
 
         <div class="form-row">
           <label for="ai-practice">Practice name</label>
-          <input id="ai-practice" type="text" name="practice" required autocomplete="organization">
+          <input id="ai-practice" type="text" name="practice_name" required autocomplete="organization">
         </div>
 
         <div class="form-row">
@@ -197,6 +195,16 @@
         <button type="submit" class="form-submit">Get in touch</button>
         <div class="form-fineprint">We&rsquo;ll only use your details to get in touch about the practice partner programme. No marketing automation. Promise.</div>
       </form>
+
+      <div id="form-success" style="display:none; text-align:center; padding:32px 0;">
+        <p style="font-family:'Syne',sans-serif; font-weight:800; font-size:22px; color:var(--green); margin-bottom:8px;">Thanks &mdash; we&rsquo;ll be in touch within one business day.</p>
+        <p style="font-size:14.5px; color:var(--muted);">Keep an eye on your inbox.</p>
+      </div>
+
+      <div id="form-error" style="display:none; text-align:center; padding:32px 0;">
+        <p style="font-family:'Syne',sans-serif; font-weight:800; font-size:18px; color:var(--pop); margin-bottom:8px;">Something went wrong.</p>
+        <p style="font-size:14.5px; color:var(--muted);">Please email <a href="mailto:support@owedhq.com" style="color:var(--ink); font-weight:600;">support@owedhq.com</a> instead.</p>
+      </div>
     </div>
 
     <div class="cta-box">
@@ -219,5 +227,37 @@
     </ul>
     <div class="footer-copy">&copy; 2026 Owed &middot; Built in the UK &#x1F1EC;&#x1F1E7;</div>
   </footer>
+
+  <script>
+    document.getElementById('accountant-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      var form = e.target;
+      var btn = form.querySelector('.form-submit');
+      btn.disabled = true;
+      btn.textContent = 'Submitting\u2026';
+
+      var data = {
+        name: form.name.value.trim(),
+        practice_name: form.practice_name.value.trim(),
+        email: form.email.value.trim(),
+        client_estimate: form.client_estimate.value,
+        website_url: form.website_url.value
+      };
+
+      try {
+        var res = await fetch('/api/accountant-interest', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        if (!res.ok) throw new Error('Request failed');
+        form.style.display = 'none';
+        document.getElementById('form-success').style.display = 'block';
+      } catch (err) {
+        form.style.display = 'none';
+        document.getElementById('form-error').style.display = 'block';
+      }
+    });
+  </script>
 </body>
 </html>
