@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How to Automate Invoice Chasing in Xero (And What Xero Can't Do) | Owed</title>
+  <meta name="description" content="Xero has built-in invoice reminders, but they only scratch the surface. Here's what Xero can and can't do for invoice chasing, and how to fill the gaps.">
+  <link rel="canonical" href="https://www.owedhq.com/blog/xero-invoice-chasing.html">
+  <meta property="og:title" content="How to Automate Invoice Chasing in Xero (And What Xero Can't Do)">
+  <meta property="og:description" content="Xero's reminders are basic. Here's what's missing and how to automate a proper chase sequence.">
+  <meta property="og:url" content="https://www.owedhq.com/blog/xero-invoice-chasing.html">
+  <meta property="og:type" content="article">
+  <meta property="og:image" content="https://www.owedhq.com/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="keywords" content="Xero invoice reminders, Xero invoice chasing, automate invoice chasing Xero, Xero overdue invoices, Xero payment reminders">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&amp;family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400;1,500&amp;family=Instrument+Serif:ital@0;1&amp;display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --ink: #0F0E0C; --ink-2: #2A2925; --muted: #6E6B63; --faint: #B5B2AA;
+      --paper: #FAF9F6; --cream: #F2EFE8; --line: #E4E0D8;
+      --pop: #E8420E; --pop-pale: #FEF0EB;
+      --green: #1A6644; --green-pale: #E8F5EE;
+      --amber: #D4820A; --amber-pale: #FDF3E3;
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Instrument Sans', sans-serif; background: var(--paper); color: var(--ink); overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+    nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; padding: 0 40px; height: 60px; display: flex; align-items: center; justify-content: space-between; background: rgba(250,249,246,0.9); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
+    .nav-logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 18px; letter-spacing: -0.5px; color: var(--ink); display: flex; align-items: center; gap: 8px; text-decoration: none; }
+    .nav-logo-dot { width: 8px; height: 8px; background: var(--pop); border-radius: 50%; }
+    .nav-links { display: flex; align-items: center; gap: 28px; list-style: none; }
+    .nav-links a { font-size: 14px; color: var(--muted); text-decoration: none; font-weight: 500; transition: color 0.15s; }
+    .nav-links a:hover { color: var(--ink); }
+    .nav-cta { background: var(--ink) !important; color: var(--paper) !important; padding: 8px 18px; border-radius: 6px; font-weight: 600 !important; font-size: 13.5px !important; }
+    .nav-cta:hover { background: var(--ink-2) !important; }
+    footer { padding: 32px 40px; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--line); max-width: 1200px; margin: 0 auto; }
+    .footer-logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 15px; color: var(--ink); }
+    .footer-links { display: flex; gap: 24px; list-style: none; flex-wrap: wrap; }
+    .footer-links a { font-size: 13px; color: var(--faint); text-decoration: none; transition: color 0.15s; }
+    .footer-links a:hover { color: var(--ink); }
+    .footer-copy { font-size: 12px; color: var(--faint); }
+    @media (max-width: 900px) { nav { padding: 0 20px; } footer { flex-direction: column; gap: 16px; text-align: center; padding: 24px 20px; } }
+    @media (max-width: 600px) { .nav-links a:not(.nav-cta) { display: none; } .footer-links { justify-content: center; } }
+    .page { max-width: 680px; margin: 0 auto; padding: 120px 24px 80px; }
+    .breadcrumb { font-size: 13px; color: var(--faint); margin-bottom: 24px; }
+    .breadcrumb a { color: var(--muted); text-decoration: none; }
+    .breadcrumb a:hover { color: var(--ink); }
+    .section-label { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: var(--faint); margin-bottom: 16px; }
+    h1 { font-family: 'Syne', sans-serif; font-weight: 800; letter-spacing: -0.04em; font-size: clamp(28px, 4vw, 42px); line-height: 1.1; color: var(--ink); }
+    h2 { font-family: 'Syne', sans-serif; font-weight: 800; letter-spacing: -0.035em; font-size: clamp(22px, 3vw, 30px); line-height: 1.1; color: var(--ink); margin-bottom: 16px; }
+    h3 { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 20px; letter-spacing: -0.02em; color: var(--ink); margin-bottom: 10px; }
+    .subtitle { font-size: 18px; color: var(--muted); line-height: 1.6; margin-top: 16px; }
+    .section { margin-top: 48px; }
+    .body-text { font-size: 15px; color: var(--muted); line-height: 1.75; margin-top: 12px; }
+    .body-text strong { color: var(--ink); }
+    .body-text a { color: var(--ink); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
+    .body-text a:hover { color: var(--pop); }
+    .compare-box { background: white; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin-top: 16px; }
+    .compare-row { display: flex; border-bottom: 1px solid var(--line); }
+    .compare-row:last-child { border-bottom: none; }
+    .compare-feature { flex: 1; padding: 14px 18px; font-size: 14px; color: var(--ink-2); }
+    .compare-xero, .compare-owed { width: 100px; padding: 14px 18px; text-align: center; font-size: 14px; font-weight: 600; }
+    .compare-header { background: var(--cream); }
+    .compare-header .compare-feature { font-weight: 600; color: var(--faint); text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; }
+    .compare-header .compare-xero, .compare-header .compare-owed { font-size: 12px; color: var(--faint); text-transform: uppercase; letter-spacing: 0.5px; }
+    .check { color: var(--green); }
+    .cross { color: var(--faint); }
+    .callout { background: var(--cream); border: 1px solid var(--line); border-radius: 14px; padding: 28px; margin-top: 32px; text-align: center; }
+    .callout-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 18px; color: var(--ink); margin-bottom: 8px; }
+    .callout-text { font-size: 14px; color: var(--muted); margin-bottom: 16px; }
+    .callout-link { display: inline-flex; align-items: center; gap: 6px; background: var(--ink); color: var(--paper); padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; text-decoration: none; transition: background 0.15s; }
+    .callout-link:hover { background: var(--ink-2); }
+    .cta-box { margin-top: 56px; background: var(--cream); border-radius: 16px; padding: 40px; text-align: center; }
+    .cta-box h2 { font-size: 24px; margin-bottom: 20px; }
+    .cta-btn { display: inline-flex; align-items: center; background: var(--ink); color: var(--paper); padding: 14px 28px; border-radius: 8px; font-size: 15px; font-weight: 600; text-decoration: none; transition: background 0.15s; }
+    .cta-btn:hover { background: var(--ink-2); }
+    .cta-sub { font-size: 13px; color: var(--muted); margin-top: 16px; }
+    .updated { font-size: 13px; color: var(--faint); margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--line); }
+  </style>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "How to Automate Invoice Chasing in Xero (And What Xero Can't Do)",
+    "description": "Xero has built-in invoice reminders, but they're limited. Here's what's missing and how to fill the gap.",
+    "url": "https://www.owedhq.com/blog/xero-invoice-chasing.html",
+    "datePublished": "2026-04-15",
+    "dateModified": "2026-04-15",
+    "author": { "@type": "Organization", "name": "Owed", "url": "https://www.owedhq.com" },
+    "publisher": { "@type": "Organization", "name": "Owed", "url": "https://www.owedhq.com" }
+  }
+  </script>
+</head>
+<body>
+  <nav>
+    <a href="/" class="nav-logo"><div class="nav-logo-dot"></div>owed</a>
+    <ul class="nav-links">
+      <li><a href="/calculator.html">Calculator</a></li>
+      <li><a href="/login">Log in</a></li>
+      <li><a href="/signup" class="nav-cta">Start free trial</a></li>
+    </ul>
+  </nav>
+
+  <main class="page">
+    <div class="breadcrumb"><a href="/late-payments/">Late Payment Hub</a> &rsaquo; Guide</div>
+    <div class="section-label">Guide</div>
+    <h1>How to automate invoice chasing in Xero (and what Xero can't do)</h1>
+    <p class="subtitle">Xero is brilliant accounting software. But its invoice chasing features are basic. If you rely on Xero's built-in reminders to get paid, you are leaving money on the table.</p>
+
+    <div class="section">
+      <h2>What Xero's invoice reminders actually do</h2>
+      <p class="body-text">Xero offers a built-in invoice reminder feature. Here is how it works:</p>
+      <p class="body-text"><strong>Manual batch reminders.</strong> You can go to Business &rarr; Invoices &rarr; Awaiting Payment, select overdue invoices, and click "Send Reminder." Xero sends a generic email with the invoice attached. You can customise the reminder template, but it is the same message every time.</p>
+      <p class="body-text"><strong>Automatic reminders (Xero Standard and above).</strong> You can set up automatic reminders to send at intervals after an invoice becomes overdue. For example: send Reminder 1 at 7 days overdue, Reminder 2 at 14 days, Reminder 3 at 21 days.</p>
+      <p class="body-text">This sounds decent on paper. So why is it not enough?</p>
+    </div>
+
+    <div class="section">
+      <h2>What is missing from Xero's reminders</h2>
+      <p class="body-text"><strong>No escalation.</strong> Every reminder uses the same tone. Reminder 3 sounds exactly like Reminder 1. There is no progression from friendly nudge to firm notice to final warning. In reality, your tone should change as the invoice gets older. A message that is appropriate at 3 days overdue is inappropriate at 30 days.</p>
+      <p class="body-text"><strong>No statutory interest references.</strong> Xero's reminders do not mention the <a href="/blog/late-payment-act-2026.html">Late Payment of Commercial Debts Act</a>. They do not calculate statutory interest or include compensation amounts. These are powerful tools for getting paid, and Xero ignores them entirely.</p>
+      <p class="body-text"><strong>No relationship-safe language.</strong> Xero's default templates are functional but cold. They read like system-generated notifications, because they are. There is no nuance, no warmth, and no strategic thinking about how to phrase a chase email without damaging a valuable client relationship.</p>
+      <p class="body-text"><strong>No intelligent stopping.</strong> If you use automatic reminders and a client pays between reminder intervals, there is a risk they receive a chasing email after payment has been made. Xero syncs, but the timing is not always immediate.</p>
+      <p class="body-text"><strong>The emails come from Xero.</strong> Clients receive an email from "notifications@xero.com" or similar. It is obvious that you are using accounting software to chase them. This undermines the personal touch that is so important in maintaining relationships.</p>
+      <p class="body-text"><strong>No visibility into what happens next.</strong> Xero does not tell you if the reminder was opened. It does not track responses. There is no dashboard showing which invoices are being chased, which have been opened, and which need escalation.</p>
+    </div>
+
+    <div class="section">
+      <h2>Xero vs dedicated chasing: a comparison</h2>
+      <div class="compare-box">
+        <div class="compare-row compare-header">
+          <div class="compare-feature">Feature</div>
+          <div class="compare-xero">Xero</div>
+          <div class="compare-owed">Owed</div>
+        </div>
+        <div class="compare-row">
+          <div class="compare-feature">Send reminders for overdue invoices</div>
+          <div class="compare-xero check">&#10003;</div>
+          <div class="compare-owed check">&#10003;</div>
+        </div>
+        <div class="compare-row">
+          <div class="compare-feature">Escalating tone across stages</div>
+          <div class="compare-xero cross">&#10005;</div>
+          <div class="compare-owed check">&#10003;</div>
+        </div>
+        <div class="compare-row">
+          <div class="compare-feature">Statutory interest calculation</div>
+          <div class="compare-xero cross">&#10005;</div>
+          <div class="compare-owed check">&#10003;</div>
+        </div>
+        <div class="compare-row">
+          <div class="compare-feature">Emails sent in your business name</div>
+          <div class="compare-xero cross">&#10005;</div>
+          <div class="compare-owed check">&#10003;</div>
+        </div>
+        <div class="compare-row">
+          <div class="compare-feature">Stops chasing on payment detection</div>
+          <div class="compare-xero cross">&#10005;</div>
+          <div class="compare-owed check">&#10003;</div>
+        </div>
+        <div class="compare-row">
+          <div class="compare-feature">Open tracking</div>
+          <div class="compare-xero cross">&#10005;</div>
+          <div class="compare-owed check">&#10003;</div>
+        </div>
+        <div class="compare-row">
+          <div class="compare-feature">Late Payment Act references</div>
+          <div class="compare-xero cross">&#10005;</div>
+          <div class="compare-owed check">&#10003;</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>How to fill the gap</h2>
+      <p class="body-text">You have three options:</p>
+      <p class="body-text"><strong>1. Do it manually.</strong> Write your own chase emails at each stage, track which invoices need attention in a spreadsheet, and send follow-ups yourself. This works when you have five clients. It does not scale.</p>
+      <p class="body-text"><strong>2. Use Xero reminders and accept the limitations.</strong> Better than nothing, but you are sending the same flat message every time and missing the tools (escalation, statutory interest, personal tone) that actually get invoices paid.</p>
+      <p class="body-text"><strong>3. Use a dedicated chasing tool that connects to Xero.</strong> This is what Owed does. It reads your Xero ledger, identifies overdue invoices, and runs a 4-stage chase sequence that escalates in tone, references statutory interest, and sends in your business name. When Xero marks an invoice as paid, Owed stops chasing automatically.</p>
+      <p class="body-text">For the <a href="/blog/invoice-chasing-email-templates.html">email templates</a> that Owed uses as a foundation, see our template guide. For a deeper look at the chasing process, read <a href="/blog/how-to-chase-invoices-uk.html">how to chase a late invoice in the UK</a>.</p>
+    </div>
+
+    <div class="cta-box">
+      <h2>Owed plugs directly into Xero.</h2>
+      <a href="/signup" class="cta-btn">Start free trial</a>
+      <p class="cta-sub">Two-minute setup. Reads your invoices. Sends professional chase emails in your name. Stops when paid.</p>
+    </div>
+
+    <p class="updated">Last updated: April 2026</p>
+  </main>
+
+  <footer>
+    <div class="footer-logo">owed</div>
+    <ul class="footer-links">
+      <li><a href="/late-payments/">Late Payment Hub</a></li>
+      <li><a href="/calculator.html">Interest calculator</a></li>
+      <li><a href="/privacy">Privacy</a></li>
+      <li><a href="/terms">Terms</a></li>
+      <li><a href="/support">Support</a></li>
+    </ul>
+    <div class="footer-copy">&copy; 2026 Owed &middot; Built in the UK &#x1F1EC;&#x1F1E7;</div>
+  </footer>
+</body>
+</html>
