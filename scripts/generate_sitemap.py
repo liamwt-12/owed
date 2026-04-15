@@ -2,7 +2,7 @@
 """Generate public/sitemap.xml from a structured page list."""
 import os
 
-LASTMOD = "2026-04-08"
+LASTMOD = "2026-04-15"
 BASE = "https://owedhq.com"
 
 # (path, priority)
@@ -15,8 +15,15 @@ STATIC_PAGES = [
     ("/compare/owed-vs-equisettle.html", "0.8"),
     ("/compare/best-invoice-chasing-software-uk.html", "0.8"),
     ("/compare/chaser-alternatives-uk.html", "0.8"),
+    ("/partners.html", "0.9"),
+    ("/late-payments/", "0.8"),
     ("/calculator.html", "0.7"),
     ("/blog/late-payment-act-guide.html", "0.7"),
+    ("/blog/how-to-chase-invoices-uk.html", "0.7"),
+    ("/blog/late-payment-act-2026.html", "0.7"),
+    ("/blog/invoice-chasing-email-templates.html", "0.7"),
+    ("/blog/xero-invoice-chasing.html", "0.7"),
+    ("/blog/freelancer-late-payment-guide.html", "0.7"),
     ("/privacy", "0.5"),
     ("/terms", "0.5"),
     ("/support", "0.5"),
