@@ -18,7 +18,7 @@ export default async function AppLayout({
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('business_name, email, beta_user')
+    .select('business_name, email, beta_user, partner, referred_by')
     .eq('id', user.id)
     .single()
 
@@ -35,26 +35,28 @@ export default async function AppLayout({
     new Date(subscription.trial_ends_at) > new Date()
 
   // Grace period: if no subscription exists, check profile creation date
-  // Allow 14 days from signup before requiring payment
+  // Allow 14 days from signup (30 days if referred by a partner)
   let isInGracePeriod = false
   if (!subscription) {
     const { data: profileData } = await supabase
       .from('profiles')
-      .select('created_at')
+      .select('created_at, referred_by')
       .eq('id', user.id)
       .single()
 
     if (profileData?.created_at) {
+      const trialDays = profileData.referred_by ? 30 : 14
       const daysSinceSignup = Math.floor(
         (Date.now() - new Date(profileData.created_at).getTime()) / (1000 * 60 * 60 * 24)
       )
-      isInGracePeriod = daysSinceSignup <= 14
+      isInGracePeriod = daysSinceSignup <= trialDays
     }
   }
 
   const isBetaUser = profile?.beta_user === true
+  const isPartner = profile?.partner === true
 
-  if (!isActive && !isTrialing && !isInGracePeriod && !isBetaUser) {
+  if (!isActive && !isTrialing && !isInGracePeriod && !isBetaUser && !isPartner) {
     redirect('/upgrade')
   }
 

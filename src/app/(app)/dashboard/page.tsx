@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
+import { CopyButton } from './CopyButton'
 
 export default async function DashboardPage() {
   const supabase = createClient()
@@ -32,16 +33,28 @@ export default async function DashboardPage() {
 
   if (error) console.error('Dashboard query error:', error)
 
-  // Get recovery stats
+  // Get recovery stats and partner info
   const { data: profile } = await supabase
     .from('profiles')
-    .select('total_recovered, tracking_start_date, promise_checked, promise_credit_applied')
+    .select('total_recovered, tracking_start_date, promise_checked, promise_credit_applied, partner, partner_code')
     .eq('id', user!.id)
     .single()
 
   const totalRecovered = Number(profile?.total_recovered) || 0
   const trackingStartDate = profile?.tracking_start_date
   const promiseCreditApplied = profile?.promise_credit_applied
+  const isPartner = profile?.partner === true
+  const partnerCode = profile?.partner_code
+
+  // Get referral count for partners
+  let referralCount = 0
+  if (isPartner && partnerCode) {
+    const { count } = await supabase
+      .from('profiles')
+      .select('id', { count: 'exact', head: true })
+      .eq('referred_by', partnerCode)
+    referralCount = count || 0
+  }
 
   // Get recent open tracking events (last 7 days)
   const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
@@ -121,6 +134,23 @@ export default async function DashboardPage() {
               <p className="mt-1.5 text-xs text-green font-medium">We credited your account with £87 — promise kept.</p>
             )}
           </div>
+        </div>
+      )}
+
+      {/* Partner referral card */}
+      {isPartner && partnerCode && (
+        <div className="mb-4 bg-white border border-line rounded-xl p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="w-2 h-2 bg-pop rounded-full" />
+            <p className="text-sm font-semibold text-ink">You&apos;re a Founding Partner</p>
+          </div>
+          <div className="flex items-center gap-2 mb-2">
+            <p className="text-sm text-muted">Your referral link:</p>
+            <code className="text-sm font-mono bg-cream px-2 py-1 rounded text-ink">owedhq.com/signup?ref={partnerCode}</code>
+            <CopyButton text={`https://owedhq.com/signup?ref=${partnerCode}`} />
+          </div>
+          <p className="text-sm text-muted">Clients referred: <span className="font-semibold text-ink">{referralCount}</span></p>
+          <p className="text-xs text-faint mt-2">Share this link with clients. They get 30 days free. You get the credit.</p>
         </div>
       )}
 

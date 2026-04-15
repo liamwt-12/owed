@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
@@ -14,6 +14,18 @@ export function SignupForm() {
   const supabase = createClient()
   const searchParams = useSearchParams()
   const isBeta = searchParams.get('beta') === 'OWED2026'
+  const isPartner = searchParams.get('partner') === 'true'
+  const refCode = searchParams.get('ref')
+
+  // Set cookies on mount so they persist through Xero SSO redirect flow
+  useEffect(() => {
+    if (isPartner) {
+      document.cookie = 'owed_partner=true; path=/; max-age=3600; SameSite=Lax'
+    }
+    if (refCode) {
+      document.cookie = `owed_ref=${refCode}; path=/; max-age=3600; SameSite=Lax`
+    }
+  }, [isPartner, refCode])
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -34,6 +46,12 @@ export function SignupForm() {
     } else {
       if (isBeta) {
         document.cookie = 'owed_beta=OWED2026; path=/; max-age=3600; SameSite=Lax'
+      }
+      if (isPartner) {
+        document.cookie = 'owed_partner=true; path=/; max-age=3600; SameSite=Lax'
+      }
+      if (refCode) {
+        document.cookie = `owed_ref=${refCode}; path=/; max-age=3600; SameSite=Lax`
       }
       setSuccess(true)
       setLoading(false)
@@ -62,11 +80,22 @@ export function SignupForm() {
         ) : (
           <>
             <h1 className="font-syne font-extrabold text-2xl text-ink tracking-tight mb-2">
-              Start your free trial
+              {isPartner ? 'Become a Founding Partner' : 'Start your free trial'}
             </h1>
-            <p className="text-muted text-[15px] mb-8">
-              14 days free. No credit card needed.
+            <p className="text-muted text-[15px] mb-3">
+              {isPartner ? 'Free for life. No credit card needed.' : refCode ? '30 days free. No credit card needed.' : '14 days free. No credit card needed.'}
             </p>
+
+            {isPartner && (
+              <div className="mb-6 px-3 py-2.5 bg-pop-pale border border-pop/15 rounded-lg">
+                <p className="text-sm text-pop font-medium">Signing up as an accountant partner</p>
+              </div>
+            )}
+            {refCode && !isPartner && (
+              <div className="mb-6 px-3 py-2.5 bg-green-pale border border-green/15 rounded-lg">
+                <p className="text-sm text-green font-medium">You&apos;ve been referred — enjoy 30 days free</p>
+              </div>
+            )}
 
             <a
               href="/api/auth/xero-sso/connect"

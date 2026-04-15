@@ -51,5 +51,48 @@ export async function GET(request: Request) {
     cookies().set('owed_beta', '', { path: '/', maxAge: 0 })
   }
 
+  // Check for partner cookie — mark profile as partner with unique code
+  const partnerCookie = cookies().get('owed_partner')?.value
+  if (partnerCookie === 'true') {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      const partnerCode = generatePartnerCode()
+      const { error: partnerError } = await supabase
+        .from('profiles')
+        .update({ partner: true, partner_code: partnerCode })
+        .eq('id', user.id)
+      if (partnerError) {
+        console.error('Failed to set partner status:', partnerError)
+      }
+    }
+    cookies().set('owed_partner', '', { path: '/', maxAge: 0 })
+  }
+
+  // Check for referral cookie — store who referred this user
+  const refCookie = cookies().get('owed_ref')?.value
+  if (refCookie) {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      const { error: refError } = await supabase
+        .from('profiles')
+        .update({ referred_by: refCookie })
+        .eq('id', user.id)
+      if (refError) {
+        console.error('Failed to set referral:', refError)
+      }
+    }
+    cookies().set('owed_ref', '', { path: '/', maxAge: 0 })
+  }
+
   return NextResponse.redirect(`${origin}${next}`)
+}
+
+/** Generate a random 6-character uppercase alphanumeric code */
+function generatePartnerCode(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+  let code = ''
+  for (let i = 0; i < 6; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)]
+  }
+  return code
 }
